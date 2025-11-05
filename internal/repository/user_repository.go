@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"go-futsal-booking-api/internal/domain"
-	gormContract "go-futsal-booking-api/internal/gorm"
+	gormContract "go-futsal-booking-api/internal/repository/model"
 
 	"gorm.io/gorm"
 )
