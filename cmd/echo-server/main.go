@@ -39,6 +39,17 @@ func main() {
 
 	logger.Info("Database connected successfully")
 
+	// Init notification from mailjet
+	mailjetEmail := repository.NewMailjetRepository(
+		repository.MailjetConfig{
+			MailjetBaseURL:           cfg.Mailjet.MailjetBaseUrl,
+			MailjetBasicAuthUsername: cfg.Mailjet.MailjetBasicAuthUsername,
+			MailjetBasicAuthPassword: cfg.Mailjet.MailjetBasicAuthPassword,
+			MailjetSenderEmail:       cfg.Mailjet.MailjetSenderEmail,
+			MailjetSenderName:        cfg.Mailjet.MailjetSenderName,
+		},
+	)
+
 	// Init validate
 	validate := validator.New()
 
@@ -46,7 +57,7 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 
 	// Init service
-	userService := service.NewUserService(userRepo, validate)
+	userService := service.NewUserService(userRepo, validate, mailjetEmail, cfg.App.AppEmailVerificationKey, cfg.App.AppDeploymentUrl)
 
 	// Init handler
 	userHandler := handler.NewUserHandler(userService)

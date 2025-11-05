@@ -9,6 +9,7 @@ import (
 	jsonres "go-futsal-booking-api/pkg/response"
 	"go-futsal-booking-api/pkg/validator"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -60,7 +61,7 @@ func (h *UserHandler) Register(c echo.Context) error {
 		))
 	}
 
-	return c.JSON(http.StatusOK, jsonres.Success(
+	return c.JSON(http.StatusCreated, jsonres.Success(
 		"User registered successfully", dto.ToUserResponse(&user),
 	))
 }
@@ -97,5 +98,25 @@ func (h *UserHandler) Login(c echo.Context) error {
 			Token: token,
 			User:  dto.ToUserResponse(&user),
 		},
+	))
+}
+
+func (h *UserHandler) VerifyEmail(c echo.Context) error {
+	encCode := c.Param("code")
+
+	err := h.userService.VerifyEmail(encCode)
+	if err != nil {
+		if strings.Contains(err.Error(), "invalid or expired") {
+			return c.JSON(http.StatusUnauthorized, jsonres.Error(
+				"INVALID", err.Error(), nil,
+			))
+		}
+		return c.JSON(http.StatusInternalServerError, jsonres.Error(
+			"INTERNAL_SERVER_ERROR", err.Error(), nil,
+		))
+	}
+
+	return c.JSON(http.StatusOK, jsonres.Success(
+		"Success to Verifying Email", nil,
 	))
 }

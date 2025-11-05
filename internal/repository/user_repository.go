@@ -16,6 +16,7 @@ type UserRepository interface {
 	FindAll(ctx context.Context) ([]domain.User, error)
 	Update(ctx context.Context, user *domain.User) error
 	Delete(ctx context.Context, id uint) error
+	UpdateEmailVerification(ctx context.Context, user domain.User) error
 }
 
 type gormUserRepository struct {
@@ -119,4 +120,10 @@ func (r *gormUserRepository) Delete(ctx context.Context, id uint) error {
 	}
 
 	return nil
+}
+
+func (r *gormUserRepository) UpdateEmailVerification(ctx context.Context, user domain.User) error {
+	err := r.DB.WithContext(ctx).Updates(&user).Error
+
+	return err
 }
