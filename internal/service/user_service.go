@@ -3,29 +3,53 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"go-futsal-booking-api/internal/domain"
 	"go-futsal-booking-api/internal/repository"
 	"go-futsal-booking-api/pkg/logger"
 	"go-futsal-booking-api/pkg/utils"
+	"log/slog"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/pobyzaarif/goshortcute"
 )
 
 type UserService interface {
 	Register(ctx context.Context, fullName, email, password string, age int, address string) (domain.User, error)
 	Login(ctx context.Context, email, password string) (string, domain.User, error)
+	VerifyEmail(verificationCodeEncrypt string) (err error)
 }
 
 type userService struct {
-	userRepo repository.UserRepository
-	validate *validator.Validate
+	userRepo                repository.UserRepository
+	validate                *validator.Validate
+	notifRepo               repository.NotificationRepository
+	appEmailVerificationKey string
+	appDeploymentUrl        string
 }
 
-func NewUserService(userRepo repository.UserRepository, validate *validator.Validate) UserService {
+const (
+	verificationCodeTTL      = 5
+	SubjectRegisterAccount   = "Activate Your Account!"
+	EmailBodyRegisterAccount = `Halo, %v, aktivasi akun anda dengan membuka tautan dibawah</br></br>%v</br>catatan: link hanya berlaku %v menit`
+)
+
+func NewUserService(
+	userRepo repository.UserRepository,
+	validate *validator.Validate,
+	notifRepo repository.NotificationRepository,
+	appEmailVerificationKey string,
+	appDeploymentUrl string,
+) UserService {
 	return &userService{
-		userRepo: userRepo,
-		validate: validate,
+		userRepo:                userRepo,
+		validate:                validate,
+		notifRepo:               notifRepo,
+		appEmailVerificationKey: appEmailVerificationKey,
+		appDeploymentUrl:        appDeploymentUrl,
 	}
 }
 
@@ -74,6 +98,15 @@ func (s *userService) Register(ctx context.Context, fullName, email, password st
 		return domain.User{}, err
 	}
 
+	timeNow := time.Now()
+	expAt := timeNow.Add(time.Duration(time.Minute * verificationCodeTTL)).Unix()
+
+	verificationCode := fmt.Sprintf("%v|%v", newUser.Email, expAt)
+	verificationCodeEncrypt, _ := goshortcute.AESCBCEncrypt([]byte(verificationCode), []byte(s.appEmailVerificationKey))
+	activationLink := s.appDeploymentUrl + "/users/email-verification/" + verificationCodeEncrypt
+
+	_ = s.notifRepo.SendEmail(newUser.FullName, newUser.Email, SubjectRegisterAccount, fmt.Sprintf(EmailBodyRegisterAccount, newUser.FullName, activationLink, verificationCodeTTL))
+
 	newUser.Password = ""
 	return newUser, nil
 }
@@ -91,6 +124,11 @@ func (s *userService) Login(ctx context.Context, email, password string) (string
 		return "", domain.User{}, errors.New("incorrect password")
 	}
 
+	if !user.IsVerified {
+		logger.Error("Email address has not been verified", err)
+		return "", domain.User{}, errors.New("email address has not been verified")
+	}
+
 	userIdStr := strconv.FormatUint(uint64(user.ID), 10)
 	token, err := utils.GenerateJWT(userIdStr, user.Role.RoleName)
 	if err != nil {
@@ -100,4 +138,51 @@ func (s *userService) Login(ctx context.Context, email, password string) (string
 
 	user.Password = ""
 	return token, user, nil
+}
+
+func (s *userService) VerifyEmail(verificationCodeEncrypt string) error {
+	var ctx context.Context
+	verificationCodeDecrypt, err := goshortcute.AESCBCDecrypt([]byte(verificationCodeEncrypt), []byte(s.appEmailVerificationKey))
+	if err != nil {
+		logger.Error("Verifying email error", err)
+		return errors.New("invalid or expired url")
+	}
+
+	verificationCode := strings.Split(verificationCodeDecrypt, "|")
+	if len(verificationCode) != 2 {
+		logger.Error("Verifying email error", verificationCodeDecrypt)
+		return errors.New("invalid or expired url")
+	}
+
+	email := verificationCode[0]
+	expAtStr := verificationCode[1]
+
+	ts, err := strconv.ParseInt(expAtStr, 10, 64)
+	if err != nil {
+		logger.Error("Verifying email error", verificationCodeDecrypt)
+		return errors.New("invalid or expired url")
+	}
+	expAt := time.Unix(ts, 0)
+	if time.Now().After(expAt) {
+		return errors.New("invalid or expired url")
+	}
+
+	getUser, err := s.userRepo.FindByEmail(ctx, email)
+	if err != nil {
+		logger.Error("Verifying email error", err)
+		return errors.New("failed to get user by email")
+	}
+
+	if getUser.IsVerified {
+		logger.Warn("verify email err", slog.Any("err", "email verified already"))
+		return errors.New("invalid or expired url")
+	}
+
+	getUser.IsVerified = true
+	if err := s.userRepo.UpdateEmailVerification(ctx, getUser); err != nil {
+		logger.Error("Verify email err", err)
+		return err
+	}
+
+	return nil
 }
