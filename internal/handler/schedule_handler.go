@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"go-futsal-booking-api/internal/domain"
 	"go-futsal-booking-api/internal/dto/request"
 	dto "go-futsal-booking-api/internal/dto/response"
 	"go-futsal-booking-api/internal/service"
@@ -33,9 +34,9 @@ func (h *ScheduleHandler) GetScheduleByID(c echo.Context) error {
 
 	scheduleId, err := strconv.ParseUint(scheduleIdStr, 10, 64)
 	if err != nil {
-		logger.Error("Invalid venue id", err)
+		logger.Error("Invalid field id", err)
 		return c.JSON(http.StatusBadRequest, jsonres.Error(
-			"BAD_REQUEST", "Invalid venue id", map[string]interface{}{"id": c.Param("id")},
+			"BAD_REQUEST", "Invalid field id", map[string]interface{}{"id": c.Param("id")},
 		))
 	}
 
@@ -53,6 +54,15 @@ func (h *ScheduleHandler) GetScheduleByID(c echo.Context) error {
 			))
 		}
 
+		if errors.Is(err, domain.ErrScheduleNotFound) {
+			logger.Error("schedule not found", err)
+			return c.JSON(http.StatusNotFound, jsonres.Error(
+				"NOT_FOUND",
+				"schedule not found",
+				map[string]interface{}{"schedule_id": scheduleId},
+			))
+		}
+
 		return c.JSON(http.StatusInternalServerError, jsonres.Error(
 			"INTERNAL_ERROR",
 			"Failed to retrieve schedule",
@@ -67,13 +77,22 @@ func (h *ScheduleHandler) GetScheduleByID(c echo.Context) error {
 }
 
 func (h *ScheduleHandler) GetScheduleByField(c echo.Context) error {
-	fieldIdStr := c.Param("id")
+	// fieldIdStr := c.Param("id")
+
+	fieldIdStr := c.QueryParam("fieldId")
+
+	if fieldIdStr == "" {
+		logger.Error("invalid fieldId query parameter")
+		return c.JSON(http.StatusBadRequest, jsonres.Error(
+			"BAD_REQUEST", "Invalid field id", nil,
+		))
+	}
 
 	fieldId, err := strconv.ParseUint(fieldIdStr, 10, 64)
 	if err != nil {
-		logger.Error("Invalid venue id", err)
+		logger.Error("Invalid field id", err)
 		return c.JSON(http.StatusBadRequest, jsonres.Error(
-			"BAD_REQUEST", "Invalid venue id", map[string]interface{}{"id": c.Param("id")},
+			"BAD_REQUEST", "Invalid field id", map[string]interface{}{"id": c.Param("id")},
 		))
 	}
 
@@ -88,6 +107,15 @@ func (h *ScheduleHandler) GetScheduleByField(c echo.Context) error {
 				"TIMEOUT",
 				"Request timeout",
 				nil,
+			))
+		}
+
+		if errors.Is(err, domain.ErrFieldNotFound) {
+			logger.Error("field not found", err)
+			return c.JSON(http.StatusNotFound, jsonres.Error(
+				"NOT_FOUND",
+				"field not found",
+				map[string]interface{}{"field_id": fieldId},
 			))
 		}
 
@@ -148,6 +176,15 @@ func (h *ScheduleHandler) CreateSchedule(c echo.Context) error {
 			))
 		}
 
+		if errors.Is(err, domain.ErrFieldNotFound) {
+			logger.Error("field not found", err)
+			return c.JSON(http.StatusNotFound, jsonres.Error(
+				"NOT_FOUND",
+				"field not found",
+				map[string]interface{}{"field_id": req.FieldID},
+			))
+		}
+
 		logger.Error("Failed to create schedule", err)
 		return c.JSON(http.StatusInternalServerError, jsonres.Error(
 			"INTERNAL_ERROR", "Failed to create schedule", nil,
@@ -179,9 +216,9 @@ func (h *ScheduleHandler) UpdateSchedule(c echo.Context) error {
 
 	scheduleId, err := strconv.ParseUint(scheduleIdStr, 10, 64)
 	if err != nil {
-		logger.Error("Invalid field id", err)
+		logger.Error("Invalid schedule id", err)
 		return c.JSON(http.StatusBadRequest, jsonres.Error(
-			"BAD_REQUEST", "Invalid field id", err,
+			"BAD_REQUEST", "Invalid schedule id", err,
 		))
 	}
 
@@ -205,9 +242,18 @@ func (h *ScheduleHandler) UpdateSchedule(c echo.Context) error {
 			))
 		}
 
-		logger.Error("Failed to update field", err)
+		if errors.Is(err, domain.ErrScheduleNotFound) {
+			logger.Error("schedule not found", err)
+			return c.JSON(http.StatusNotFound, jsonres.Error(
+				"NOT_FOUND",
+				"schedule not found",
+				map[string]interface{}{"schedule_id": scheduleId},
+			))
+		}
+
+		logger.Error("Failed to update schedule", err)
 		return c.JSON(http.StatusInternalServerError, jsonres.Error(
-			"INTERNAL_ERROR", "Failed to update field", nil,
+			"INTERNAL_ERROR", "Failed to update schedule", nil,
 		))
 	}
 
@@ -221,9 +267,9 @@ func (h *ScheduleHandler) DeleteSchedule(c echo.Context) error {
 
 	scheduleId, err := strconv.ParseUint(scheduleIdStr, 10, 64)
 	if err != nil {
-		logger.Error("Invalid field id", err)
+		logger.Error("Invalid schedule id", err)
 		return c.JSON(http.StatusBadRequest, jsonres.Error(
-			"BAD_REQUEST", "Invalid field id", err,
+			"BAD_REQUEST", "Invalid schedule id", err,
 		))
 	}
 
@@ -240,9 +286,18 @@ func (h *ScheduleHandler) DeleteSchedule(c echo.Context) error {
 			))
 		}
 
-		logger.Error("Failed to delete field", err)
+		if errors.Is(err, domain.ErrScheduleNotFound) {
+			logger.Error("schedule not found", err)
+			return c.JSON(http.StatusNotFound, jsonres.Error(
+				"NOT_FOUND",
+				"schedule not found",
+				map[string]interface{}{"schedule_id": scheduleId},
+			))
+		}
+
+		logger.Error("Failed to delete schedule", err)
 		return c.JSON(http.StatusInternalServerError, jsonres.Error(
-			"INTERNAL_SERVER_ERROR", "Failed to delete field", err,
+			"INTERNAL_SERVER_ERROR", "Failed to delete schedule", err,
 		))
 	}
 

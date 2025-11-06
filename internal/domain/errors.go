@@ -22,4 +22,5 @@ var (
 	ErrVenueNotFound        = errors.New("venue not found")
 	ErrInvalidFieldData     = errors.New("invalid field data")
 	ErrFieldTypeNotFound    = errors.New("field type not found")
+	ErrUserNotFound         = errors.New("user not found")
 )
