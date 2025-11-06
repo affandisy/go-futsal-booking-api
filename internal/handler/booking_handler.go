@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"errors"
-	"go-futsal-booking-api/internal/domain"
 	"go-futsal-booking-api/internal/dto/request"
 	dto "go-futsal-booking-api/internal/dto/response"
 	"go-futsal-booking-api/internal/service"
@@ -51,9 +50,11 @@ func (h *BookingHandler) CreateBooking(c echo.Context) error {
 
 	newBooking, err := h.bookingService.CreateBooking(
 		ctx,
-		domain.User{ID: req.UserID},
-		req.ScheduleID,
-		req.BookingDate,
+		&request.CreateBookingRequest{
+			UserID:      req.UserID,
+			ScheduleID:  req.ScheduleID,
+			BookingDate: req.BookingDate,
+		},
 	)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -71,7 +72,7 @@ func (h *BookingHandler) CreateBooking(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, jsonres.Success(
-		"Booking successfully created", dto.ToBookingResponse(&newBooking),
+		"Booking successfully created", dto.ToBookingResponse(newBooking),
 	))
 }
 
@@ -89,7 +90,7 @@ func (h *BookingHandler) GetMyBookings(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(c.Request().Context(), h.timeout)
 	defer cancel()
 
-	booking, err := h.bookingService.GetMyBookings(ctx, domain.User{ID: uint(userId)})
+	bookings, err := h.bookingService.GetMyBookings(ctx, uint(userId))
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			logger.Warn("request timeout", map[string]any{"timeout": h.timeout})
@@ -107,9 +108,14 @@ func (h *BookingHandler) GetMyBookings(c echo.Context) error {
 		))
 	}
 
+	bookingResponses := make([]interface{}, len(bookings))
+	for i, booking := range bookings {
+		bookingResponses[i] = dto.ToBookingResponse(booking)
+	}
+
 	return c.JSON(http.StatusOK, jsonres.Success(
-		"Booking retrieved successfully",
-		dto.ToBookingResponse(booking),
+		"Bookings retrieved successfully",
+		bookingResponses,
 	))
 }
 
@@ -127,7 +133,7 @@ func (h *BookingHandler) GetBookingDetails(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(c.Request().Context(), h.timeout)
 	defer cancel()
 
-	bookings, err := h.bookingService.GetBookingDetails(ctx, uint(bookingId))
+	bookings, err := h.bookingService.GetBookingByID(ctx, uint(bookingId))
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			logger.Warn("request timeout", map[string]any{"timeout": h.timeout})

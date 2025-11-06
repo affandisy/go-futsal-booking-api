@@ -62,7 +62,7 @@ func (h *ScheduleHandler) GetScheduleByID(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, jsonres.Success(
 		"Schedule retrieved successfully",
-		dto.ToScheduleResponse(&schedule),
+		dto.ToScheduleResponse(schedule),
 	))
 }
 
@@ -100,7 +100,7 @@ func (h *ScheduleHandler) GetScheduleByField(c echo.Context) error {
 
 	scheduleResponse := make([]dto.ScheduleResponse, len(schedules))
 	for i, schedule := range schedules {
-		scheduleResponse[i] = dto.ToScheduleResponse(&schedule)
+		scheduleResponse[i] = dto.ToScheduleResponse(schedule)
 	}
 
 	return c.JSON(http.StatusOK, jsonres.Success(
@@ -131,11 +131,13 @@ func (h *ScheduleHandler) CreateSchedule(c echo.Context) error {
 
 	newSchedule, err := h.scheduleService.CreateSchedule(
 		ctx,
-		req.FieldID,
-		req.DayOfWeek,
-		req.StartTime,
-		req.EndTime,
-		req.Price,
+		&request.CreateScheduleRequest{
+			FieldID:   req.FieldID,
+			DayOfWeek: req.DayOfWeek,
+			StartTime: req.StartTime,
+			EndTime:   req.EndTime,
+			Price:     req.Price,
+		},
 	)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -153,7 +155,7 @@ func (h *ScheduleHandler) CreateSchedule(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, jsonres.Success(
-		"Schedule successfully created", dto.ToScheduleResponse(&newSchedule),
+		"Schedule successfully created", dto.ToScheduleResponse(newSchedule),
 	))
 }
 
@@ -210,17 +212,9 @@ func (h *ScheduleHandler) UpdateSchedule(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, jsonres.Success(
-		"Schedule successfully updated", dto.ToScheduleResponse(&updatedSchedule),
+		"Schedule successfully updated", dto.ToScheduleResponse(updatedSchedule),
 	))
 }
-
-// type ScheduleService interface {
-// 	GetScheduleByID(ctx context.Context, id uint) (domain.Schedule, error)
-// 	GetScheduleByField(ctx context.Context, fieldID uint) ([]domain.Schedule, error)
-// 	CreateSchedule(ctx context.Context, fieldId uint, dayOfWeek int, startTime, endTime string, price float64) (domain.Schedule, error)
-// 	UpdateSchedule(ctx context.Context, id uint, dayOfWeek int, startTime, endTime string, price float64) (domain.Schedule, error)
-// 	DeleteSchedule(ctx context.Context, id uint) error
-// }
 
 func (h *ScheduleHandler) DeleteSchedule(c echo.Context) error {
 	scheduleIdStr := c.Param("id")

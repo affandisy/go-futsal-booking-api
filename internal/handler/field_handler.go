@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"go-futsal-booking-api/internal/domain"
 	"go-futsal-booking-api/internal/dto/request"
 	dto "go-futsal-booking-api/internal/dto/response"
 	"go-futsal-booking-api/internal/service"
@@ -53,7 +54,7 @@ func (h *FieldHandler) GetFieldByID(c echo.Context) error {
 			))
 		}
 
-		if errors.Is(err, service.ErrFieldNotFound) {
+		if errors.Is(err, domain.ErrFieldNotFound) {
 			logger.Error("Field not found", err)
 			return c.JSON(http.StatusNotFound, jsonres.Error(
 				"NOT_FOUND",
@@ -100,7 +101,7 @@ func (h *FieldHandler) GetFieldsByVenue(c echo.Context) error {
 			))
 		}
 
-		if errors.Is(err, service.ErrVenueNotFound) {
+		if errors.Is(err, domain.ErrVenueNotFound) {
 			logger.Error("Field not found", err)
 			return c.JSON(http.StatusNotFound, jsonres.Error(
 				"NOT_FOUND",
@@ -117,7 +118,7 @@ func (h *FieldHandler) GetFieldsByVenue(c echo.Context) error {
 
 	fieldResponse := make([]dto.FieldResponse, len(fields))
 	for i, field := range fields {
-		fieldResponse[i] = dto.ToFieldResponse(&field)
+		fieldResponse[i] = dto.ToFieldResponse(field)
 	}
 
 	return c.JSON(http.StatusOK, jsonres.Success(
@@ -147,9 +148,11 @@ func (h *FieldHandler) CreateField(c echo.Context) error {
 
 	newField, err := h.fieldService.CreateField(
 		ctx,
-		req.VenueID,
-		req.Name,
-		req.FieldType,
+		&request.CreateFieldRequest{
+			VenueID:   req.VenueID,
+			Name:      req.Name,
+			FieldType: req.FieldType,
+		},
 	)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -160,7 +163,7 @@ func (h *FieldHandler) CreateField(c echo.Context) error {
 			))
 		}
 
-		if errors.Is(err, service.ErrVenueNotFound) {
+		if errors.Is(err, domain.ErrVenueNotFound) {
 			return c.JSON(http.StatusNotFound, jsonres.Error(
 				"NOT_FOUND",
 				"Venue not found",
@@ -223,7 +226,7 @@ func (h *FieldHandler) UpdateField(c echo.Context) error {
 			))
 		}
 
-		if errors.Is(err, service.ErrFieldNotFound) {
+		if errors.Is(err, domain.ErrFieldNotFound) {
 			return c.JSON(http.StatusNotFound, jsonres.Error(
 				"NOT_FOUND",
 				"Field not found",
@@ -269,7 +272,7 @@ func (h *FieldHandler) DeleteField(c echo.Context) error {
 			))
 		}
 
-		if errors.Is(err, service.ErrFieldNotFound) {
+		if errors.Is(err, domain.ErrFieldNotFound) {
 			return c.JSON(http.StatusNotFound, jsonres.Error(
 				"NOT_FOUND",
 				"Field not found",
