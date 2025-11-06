@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"go-futsal-booking-api/internal/domain"
 	"go-futsal-booking-api/internal/dto/request"
 	dto "go-futsal-booking-api/internal/dto/response"
 	"go-futsal-booking-api/internal/service"
@@ -45,13 +46,21 @@ func (h *BookingHandler) CreateBooking(c echo.Context) error {
 		))
 	}
 
+	userID, ok := c.Get("user_id").(uint)
+	if !ok || userID == 0 {
+		logger.Error("Invalid or missing user token")
+		return c.JSON(http.StatusUnauthorized, jsonres.Error(
+			"UNAUTHORIZED", "Invalid or missing user token", nil,
+		))
+	}
+
 	ctx, cancel := context.WithTimeout(c.Request().Context(), h.timeout)
 	defer cancel()
 
 	newBooking, err := h.bookingService.CreateBooking(
 		ctx,
 		&request.CreateBookingRequest{
-			UserID:      req.UserID,
+			UserID:      userID,
 			ScheduleID:  req.ScheduleID,
 			BookingDate: req.BookingDate,
 		},
@@ -62,6 +71,15 @@ func (h *BookingHandler) CreateBooking(c echo.Context) error {
 				"TIMEOUT",
 				"Request timeout",
 				nil,
+			))
+		}
+
+		if errors.Is(err, domain.ErrScheduleNotFound) {
+			logger.Error("Schedule not found for booking", err)
+			return c.JSON(http.StatusNotFound, jsonres.Error(
+				"NOT_FOUND",
+				"Schedule not found",
+				map[string]any{"schedule_id": req.ScheduleID},
 			))
 		}
 
@@ -77,13 +95,18 @@ func (h *BookingHandler) CreateBooking(c echo.Context) error {
 }
 
 func (h *BookingHandler) GetMyBookings(c echo.Context) error {
-	userIdStr := c.Param("user_id")
+	// userIdStr := c.Param("user_id")
+	userIdStr := c.QueryParam("user_id")
+	if userIdStr == "" {
+		logger.Error("missing user_id query parameter")
+
+	}
 
 	userId, err := strconv.ParseUint(userIdStr, 10, 64)
 	if err != nil {
-		logger.Error("Invalid booking id", err)
+		logger.Error("Invalid user id", err)
 		return c.JSON(http.StatusBadRequest, jsonres.Error(
-			"BAD_REQUEST", "Invalid booking id", map[string]interface{}{"id": c.Param("id")},
+			"BAD_REQUEST", "Invalid user id", map[string]interface{}{"id": userIdStr},
 		))
 	}
 
@@ -101,6 +124,16 @@ func (h *BookingHandler) GetMyBookings(c echo.Context) error {
 			))
 		}
 
+		if errors.Is(err, domain.ErrUserNotFound) {
+			logger.Error("User not found", err)
+			return c.JSON(http.StatusNotFound, jsonres.Error(
+				"NOT_FOUND",
+				"User not found",
+				map[string]any{"user_id": userId},
+			))
+		}
+
+		logger.Error("Failed to retrieve booking", err)
 		return c.JSON(http.StatusInternalServerError, jsonres.Error(
 			"INTERNAL_ERROR",
 			"Failed to retrieve booking",
@@ -108,7 +141,7 @@ func (h *BookingHandler) GetMyBookings(c echo.Context) error {
 		))
 	}
 
-	bookingResponses := make([]interface{}, len(bookings))
+	bookingResponses := make([]dto.BookingResponse, len(bookings))
 	for i, booking := range bookings {
 		bookingResponses[i] = dto.ToBookingResponse(booking)
 	}
@@ -124,16 +157,16 @@ func (h *BookingHandler) GetBookingDetails(c echo.Context) error {
 
 	bookingId, err := strconv.ParseUint(bookingIdStr, 10, 64)
 	if err != nil {
-		logger.Error("Invalid venue id", err)
+		logger.Error("Invalid booking id", err)
 		return c.JSON(http.StatusBadRequest, jsonres.Error(
-			"BAD_REQUEST", "Invalid venue id", map[string]interface{}{"booking_id": bookingId},
+			"BAD_REQUEST", "Invalid booking id", map[string]interface{}{"booking_id": bookingIdStr},
 		))
 	}
 
 	ctx, cancel := context.WithTimeout(c.Request().Context(), h.timeout)
 	defer cancel()
 
-	bookings, err := h.bookingService.GetBookingByID(ctx, uint(bookingId))
+	booking, err := h.bookingService.GetBookingByID(ctx, uint(bookingId))
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			logger.Warn("request timeout", map[string]any{"timeout": h.timeout})
@@ -144,13 +177,22 @@ func (h *BookingHandler) GetBookingDetails(c echo.Context) error {
 			))
 		}
 
-		logger.Error("Failed to find field by venue id", err)
+		if errors.Is(err, domain.ErrBookingNotFound) {
+			logger.Error("Booking not found", err)
+			return c.JSON(http.StatusNotFound, jsonres.Error(
+				"NOT_FOUND",
+				"Booking not found",
+				map[string]any{"booking_id": bookingId},
+			))
+		}
+
+		logger.Error("Failed to find booking by id", err)
 		return c.JSON(http.StatusInternalServerError, jsonres.Error(
-			"INTERNAL_SERVER_ERROR", "Failed to find field by venue id", err,
+			"INTERNAL_SERVER_ERROR", "Failed to find booking by id", nil,
 		))
 	}
 
 	return c.JSON(http.StatusOK, jsonres.Success(
-		"Bookings retrieved successfully", bookings,
+		"Bookings retrieved successfully", dto.ToBookingResponse(booking),
 	))
 }

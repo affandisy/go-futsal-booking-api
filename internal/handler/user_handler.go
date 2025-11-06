@@ -10,23 +10,25 @@ import (
 	"go-futsal-booking-api/pkg/validator"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
 
 type UserHandler struct {
 	userService service.UserService
+	timeout     time.Duration
 }
 
 func NewUserHandler(userService service.UserService) *UserHandler {
 	return &UserHandler{
 		userService: userService,
+		timeout:     30 * time.Second,
 	}
 }
 
 func (h *UserHandler) Register(c echo.Context) error {
 	var reqUser request.UserRegisterRequest
-	var ctx context.Context
 
 	if err := c.Bind(&reqUser); err != nil {
 		logger.Error("Invalid request body", err)
@@ -42,9 +44,8 @@ func (h *UserHandler) Register(c echo.Context) error {
 		))
 	}
 
-	if reqUser.RoleID != 1 {
-		reqUser.RoleID = 2
-	}
+	ctx, cancel := context.WithTimeout(c.Request().Context(), h.timeout)
+	defer cancel()
 
 	user, err := h.userService.Register(
 		ctx,
@@ -68,7 +69,6 @@ func (h *UserHandler) Register(c echo.Context) error {
 
 func (h *UserHandler) Login(c echo.Context) error {
 	var reqUser request.UserLoginRequest
-	var ctx context.Context
 
 	if err := c.Bind(&reqUser); err != nil {
 		logger.Error("Failed to bind request", err)
@@ -83,6 +83,9 @@ func (h *UserHandler) Login(c echo.Context) error {
 			"VALIDATION_ERROR", "Validation failed", errs,
 		))
 	}
+
+	ctx, cancel := context.WithTimeout(c.Request().Context(), h.timeout)
+	defer cancel()
 
 	token, user, err := h.userService.Login(ctx, reqUser.Email, reqUser.Password)
 	if err != nil {
@@ -104,7 +107,10 @@ func (h *UserHandler) Login(c echo.Context) error {
 func (h *UserHandler) VerifyEmail(c echo.Context) error {
 	encCode := c.Param("code")
 
-	err := h.userService.VerifyEmail(encCode)
+	ctx, cancel := context.WithTimeout(c.Request().Context(), h.timeout)
+	defer cancel()
+
+	err := h.userService.VerifyEmail(ctx, encCode)
 	if err != nil {
 		if strings.Contains(err.Error(), "invalid or expired") {
 			return c.JSON(http.StatusUnauthorized, jsonres.Error(

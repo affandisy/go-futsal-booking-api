@@ -80,7 +80,10 @@ func (r *MailjetRepository) SendEmail(toName, toEmail, subject, message string) 
 		Messages: constructMessages,
 	}
 
-	payloadByte, _ := json.Marshal(payload)
+	payloadByte, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal json payload: %w", err)
+	}
 
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, strings.NewReader(string(payloadByte)))

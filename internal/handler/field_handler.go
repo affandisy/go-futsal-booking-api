@@ -77,7 +77,15 @@ func (h *FieldHandler) GetFieldByID(c echo.Context) error {
 }
 
 func (h *FieldHandler) GetFieldsByVenue(c echo.Context) error {
-	venueId := c.Param("venueId")
+	// venueId := c.Param("venueId")
+	venueId := c.QueryParam("venueId")
+
+	if venueId == "" {
+		logger.Error("Missing venueId query parameter")
+		return c.JSON(http.StatusBadRequest, jsonres.Error(
+			"BAD_REQUEST", "Missing 'venueId' query parameter", nil,
+		))
+	}
 
 	venueIdUint, err := strconv.ParseUint(venueId, 10, 64)
 	if err != nil {
@@ -156,6 +164,7 @@ func (h *FieldHandler) CreateField(c echo.Context) error {
 	)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
+			logger.Warn("request timeout", map[string]any{"timeout": h.timeout})
 			return c.JSON(http.StatusRequestTimeout, jsonres.Error(
 				"TIMEOUT",
 				"Request timeout",
@@ -164,6 +173,7 @@ func (h *FieldHandler) CreateField(c echo.Context) error {
 		}
 
 		if errors.Is(err, domain.ErrVenueNotFound) {
+			logger.Error("Field not found", err)
 			return c.JSON(http.StatusNotFound, jsonres.Error(
 				"NOT_FOUND",
 				"Venue not found",
@@ -219,6 +229,7 @@ func (h *FieldHandler) UpdateField(c echo.Context) error {
 	)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
+			logger.Warn("request timeout", map[string]any{"timeout": h.timeout})
 			return c.JSON(http.StatusRequestTimeout, jsonres.Error(
 				"TIMEOUT",
 				"Request timeout",
@@ -227,6 +238,7 @@ func (h *FieldHandler) UpdateField(c echo.Context) error {
 		}
 
 		if errors.Is(err, domain.ErrFieldNotFound) {
+			logger.Error("Field not found", err)
 			return c.JSON(http.StatusNotFound, jsonres.Error(
 				"NOT_FOUND",
 				"Field not found",

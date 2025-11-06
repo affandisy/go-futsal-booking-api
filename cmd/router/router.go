@@ -44,8 +44,8 @@ func SetupScheduleRoutes(api *echo.Group, handler *handler.ScheduleHandler) {
 
 func SetupBookingRoutes(api *echo.Group, handler *handler.BookingHandler) {
 	bookings := api.Group("/bookings")
-	bookings.GET("/:id", handler.GetMyBookings)
-	bookings.GET("", handler.GetBookingDetails)
+	bookings.GET("/:id", handler.GetBookingDetails)
+	bookings.GET("", handler.GetMyBookings)
 
 	bookings.POST("", handler.CreateBooking)
 }

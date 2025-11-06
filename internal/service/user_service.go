@@ -20,7 +20,7 @@ import (
 type UserService interface {
 	Register(ctx context.Context, fullName, email, password string, age int, address string) (domain.User, error)
 	Login(ctx context.Context, email, password string) (string, domain.User, error)
-	VerifyEmail(verificationCodeEncrypt string) (err error)
+	VerifyEmail(ctx context.Context, verificationCodeEncrypt string) (err error)
 }
 
 type userService struct {
@@ -140,8 +140,7 @@ func (s *userService) Login(ctx context.Context, email, password string) (string
 	return token, user, nil
 }
 
-func (s *userService) VerifyEmail(verificationCodeEncrypt string) error {
-	var ctx context.Context
+func (s *userService) VerifyEmail(ctx context.Context, verificationCodeEncrypt string) error {
 	verificationCodeDecrypt, err := goshortcute.AESCBCDecrypt([]byte(verificationCodeEncrypt), []byte(s.appEmailVerificationKey))
 	if err != nil {
 		logger.Error("Verifying email error", err)
@@ -179,7 +178,8 @@ func (s *userService) VerifyEmail(verificationCodeEncrypt string) error {
 	}
 
 	getUser.IsVerified = true
-	if err := s.userRepo.UpdateEmailVerification(ctx, getUser); err != nil {
+
+	if err := s.userRepo.UpdateEmailVerification(ctx, getUser.ID, true); err != nil {
 		logger.Error("Verify email err", err)
 		return err
 	}

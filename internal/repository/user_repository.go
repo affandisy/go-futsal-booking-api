@@ -16,7 +16,7 @@ type UserRepository interface {
 	FindAll(ctx context.Context) ([]domain.User, error)
 	Update(ctx context.Context, user *domain.User) error
 	Delete(ctx context.Context, id uint) error
-	UpdateEmailVerification(ctx context.Context, user domain.User) error
+	UpdateEmailVerification(ctx context.Context, id uint, isVerified bool) error
 }
 
 type gormUserRepository struct {
@@ -65,7 +65,7 @@ func (r *gormUserRepository) FindByEmail(ctx context.Context, email string) (dom
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.User{}, errors.New("user not found")
 		}
-		return domain.User{}, nil
+		return domain.User{}, err
 	}
 
 	return gormUser.ToDomain(), nil
@@ -116,14 +116,22 @@ func (r *gormUserRepository) Delete(ctx context.Context, id uint) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return errors.New("user not found")
+		return errors.New("user not found or already deleted")
 	}
 
 	return nil
 }
 
-func (r *gormUserRepository) UpdateEmailVerification(ctx context.Context, user domain.User) error {
-	err := r.DB.WithContext(ctx).Updates(&user).Error
+func (r *gormUserRepository) UpdateEmailVerification(ctx context.Context, id uint, isVerified bool) error {
+	result := r.DB.WithContext(ctx).Model(&gormContract.UserGorm{}).Where("id = ?", id).Update("is_verified", isVerified)
 
-	return err
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("user not found or status already updated")
+	}
+
+	return nil
 }

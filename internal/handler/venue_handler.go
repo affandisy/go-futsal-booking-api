@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"errors"
+	"go-futsal-booking-api/internal/domain"
 	"go-futsal-booking-api/internal/dto/request"
 	dto "go-futsal-booking-api/internal/dto/response"
 	"go-futsal-booking-api/internal/service"
@@ -53,6 +54,15 @@ func (h *VenueHandler) GetVenueByID(c echo.Context) error {
 			))
 		}
 
+		if errors.Is(err, domain.ErrVenueNotFound) {
+			logger.Error("venue not found", err)
+			return c.JSON(http.StatusNotFound, jsonres.Error(
+				"NOT_FOUND",
+				"Venue not found",
+				map[string]interface{}{"venue_id": venueId},
+			))
+		}
+
 		return c.JSON(http.StatusInternalServerError, jsonres.Error(
 			"INTERNAL_ERROR",
 			"Failed to retrieve venue",
@@ -88,8 +98,8 @@ func (h *VenueHandler) GetAllVenues(c echo.Context) error {
 	}
 
 	venueResponse := make([]dto.VenueResponse, len(venues))
-	for i, venue := range venues {
-		venueResponse[i] = dto.ToVenueResponse(&venue)
+	for i := range venues {
+		venueResponse[i] = dto.ToVenueResponse(&venues[i])
 	}
 
 	return c.JSON(http.StatusOK, jsonres.Success(
@@ -188,6 +198,15 @@ func (h *VenueHandler) UpdateVenue(c echo.Context) error {
 			))
 		}
 
+		if errors.Is(err, domain.ErrVenueNotFound) {
+			logger.Error("venue not found", err)
+			return c.JSON(http.StatusNotFound, jsonres.Error(
+				"NOT_FOUND",
+				"Venue not found",
+				map[string]interface{}{"venue_id": venueId},
+			))
+		}
+
 		logger.Error("Failed to update venue", err)
 		return c.JSON(http.StatusInternalServerError, jsonres.Error(
 			"INTERNAL_ERROR", "Failed to update venue", nil,
@@ -220,6 +239,15 @@ func (h *VenueHandler) DeleteVenue(c echo.Context) error {
 				"TIMEOUT",
 				"Request timeout",
 				nil,
+			))
+		}
+
+		if errors.Is(err, domain.ErrVenueNotFound) {
+			logger.Error("venue not found", err)
+			return c.JSON(http.StatusNotFound, jsonres.Error(
+				"NOT_FOUND",
+				"Venue not found",
+				map[string]interface{}{"venue_id": venueId},
 			))
 		}
 
