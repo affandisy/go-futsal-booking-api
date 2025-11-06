@@ -69,7 +69,7 @@ func Load() (*Config, error) {
 			Port:     getEnv("DB_PORT", "5432"),
 			User:     getEnv("DB_USER", "postgres"),
 			Password: getEnv("DB_PASSWORD", ""),
-			Name:     getEnv("DB_NAME", "hotel_booking"),
+			Name:     getEnv("DB_NAME", "futsal_booking_api"),
 			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
 		},
 		JWT: JWTConfig{

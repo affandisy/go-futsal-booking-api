@@ -62,10 +62,10 @@ func main() {
 
 	// Init service
 	userService := service.NewUserService(userRepo, validate, mailjetEmail, cfg.App.AppEmailVerificationKey, cfg.App.AppDeploymentUrl)
-	fieldService := service.NewFieldService(fieldRepo, venueRepo)
+	fieldService := service.NewFieldService(fieldRepo, venueRepo, scheduleRepo)
 	venueService := service.NewVenueService(venueRepo)
-	scheduleService := service.NewScheduleService(scheduleRepo, fieldRepo)
-	bookingService := service.NewBookingService(bookingRepo, scheduleRepo)
+	scheduleService := service.NewScheduleService(scheduleRepo, fieldRepo, bookingRepo)
+	bookingService := service.NewBookingService(bookingRepo, scheduleRepo, userRepo)
 
 	// Init handler
 	userHandler := handler.NewUserHandler(userService)

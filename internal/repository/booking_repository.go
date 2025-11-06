@@ -13,6 +13,7 @@ type BookingRepository interface {
 	Create(ctx context.Context, booking *domain.Booking) error
 	FindByID(ctx context.Context, id uint) (domain.Booking, error)
 	FindByUserID(ctx context.Context, userID uint) (*domain.Booking, error)
+	CancelBooking(ctx context.Context, bookingID uint) error
 }
 
 type gormBookingRepository struct {
@@ -75,4 +76,8 @@ func (r *gormBookingRepository) FindByUserID(ctx context.Context, userID uint) (
 
 	booking := gormBookings[0].ToDomain()
 	return &booking, nil
+}
+
+func (r *gormBookingRepository) CancelBooking(ctx context.Context, bookingID uint) error {
+	return r.DB.WithContext(ctx).Model(&gormContract.BookingGorm{}).Where("id = ?", bookingID).Update("status", "cancelled").Error
 }

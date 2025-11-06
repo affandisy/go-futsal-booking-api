@@ -3,118 +3,244 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"go-futsal-booking-api/internal/domain"
+	"go-futsal-booking-api/internal/dto/request"
 	"go-futsal-booking-api/internal/repository"
+	"go-futsal-booking-api/pkg/logger"
 	"time"
 )
 
 type ScheduleService interface {
-	GetScheduleByID(ctx context.Context, id uint) (domain.Schedule, error)
-	GetScheduleByField(ctx context.Context, fieldID uint) ([]domain.Schedule, error)
-	CreateSchedule(ctx context.Context, fieldId uint, dayOfWeek int, startTime, endTime string, price float64) (domain.Schedule, error)
-	UpdateSchedule(ctx context.Context, id uint, dayOfWeek int, startTime, endTime string, price float64) (domain.Schedule, error)
+	GetScheduleByID(ctx context.Context, id uint) (*domain.Schedule, error)
+	GetScheduleByField(ctx context.Context, fieldID uint) ([]*domain.Schedule, error)
+	CreateSchedule(ctx context.Context, req *request.CreateScheduleRequest) (*domain.Schedule, error)
+	UpdateSchedule(ctx context.Context, id uint, dayOfWeek int, startTime, endTime string, price float64) (*domain.Schedule, error)
 	DeleteSchedule(ctx context.Context, id uint) error
 }
 
 type scheduleService struct {
 	scheduleRepo repository.ScheduleRepository
 	fieldRepo    repository.FieldRepository
+	bookingRepo  repository.BookingRepository
 }
 
-func NewScheduleService(scheduleRepo repository.ScheduleRepository, fieldRepo repository.FieldRepository) ScheduleService {
-	return &scheduleService{scheduleRepo: scheduleRepo, fieldRepo: fieldRepo}
+// type CreateScheduleRequest struct {
+// 	FieldID   uint
+// 	DayOfWeek int
+// 	StartTime string
+// 	EndTime   string
+// 	Price     float64
+// }
+
+func NewScheduleService(scheduleRepo repository.ScheduleRepository, fieldRepo repository.FieldRepository, bookingRepo repository.BookingRepository) ScheduleService {
+	return &scheduleService{scheduleRepo: scheduleRepo, fieldRepo: fieldRepo, bookingRepo: bookingRepo}
 }
 
 func parseTime(timeStr string) (time.Time, error) {
 	return time.Parse("15:04", timeStr)
 }
 
-func (s *scheduleService) GetScheduleByID(ctx context.Context, id uint) (domain.Schedule, error) {
-	return s.scheduleRepo.FindByID(ctx, id)
+// func (s *scheduleService) validateScheduleTime(startTime, endTime time.Time) error {
+// 	if !endTime.After(startTime) {
+// 		return domain.ErrInvalidTimeRange
+// 	}
+
+// 	// invalid duration, minimum 1 hour
+// 	duration := endTime.Sub(startTime)
+// 	if duration <= 60*time.Minute {
+// 		return domain.ErrInvalidDuration
+// 	}
+
+// 	return nil
+// }
+
+func (s *scheduleService) GetScheduleByID(ctx context.Context, id uint) (*domain.Schedule, error) {
+	if id == 0 {
+		return nil, errors.New("invalid schedule id")
+	}
+
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("context error: %w", err)
+	}
+
+	schedule, err := s.scheduleRepo.FindByID(ctx, id)
+	if err != nil {
+		logger.Error("schedule not found", err.Error())
+		return nil, domain.ErrScheduleNotFound
+	}
+
+	return &schedule, nil
 }
 
-func (s *scheduleService) GetScheduleByField(ctx context.Context, fieldID uint) ([]domain.Schedule, error) {
+func (s *scheduleService) GetScheduleByField(ctx context.Context, fieldID uint) ([]*domain.Schedule, error) {
+	if fieldID == 0 {
+		logger.Error("field id not found when get schedule by field")
+		return nil, errors.New("invalid field id")
+	}
+
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("context error: %w", err)
+	}
+
 	if _, err := s.fieldRepo.FindByID(ctx, fieldID); err != nil {
+		logger.Error("field not found when get schedule by field id", err.Error())
+		return nil, errors.New("field not found")
+	}
+
+	schedules, err := s.scheduleRepo.FindByFieldID(ctx, fieldID)
+	if err != nil {
+		logger.Error("failed to get schedule by field id", err.Error())
 		return nil, err
 	}
 
-	return s.scheduleRepo.FindByFieldID(ctx, fieldID)
+	result := make([]*domain.Schedule, len(schedules))
+	for i := range schedules {
+		result[i] = &schedules[i]
+	}
+
+	return result, nil
 }
 
-func (s *scheduleService) CreateSchedule(ctx context.Context, fieldId uint, dayOfWeek int, startTime, endTime string, price float64) (domain.Schedule, error) {
-	startT, err := parseTime(startTime)
-	if err != nil {
-		return domain.Schedule{}, errors.New("invalid start time format")
+func (s *scheduleService) CreateSchedule(ctx context.Context, req *request.CreateScheduleRequest) (*domain.Schedule, error) {
+	if req == nil || req.FieldID == 0 {
+		logger.Error("missing request value to create schedule")
+		return nil, errors.New("invalid schedule request")
 	}
-	endT, err := parseTime(endTime)
+
+	if req.DayOfWeek < 1 || req.DayOfWeek > 7 {
+		logger.Error("invalid day of week request")
+		return nil, domain.ErrInvalidDayOfWeek
+	}
+
+	if req.Price <= 0 {
+		logger.Error("invalid price when creating schedule")
+		return nil, domain.ErrInvalidPrice
+	}
+
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("context error: %w", err)
+	}
+
+	startT, err := parseTime(req.StartTime)
 	if err != nil {
-		return domain.Schedule{}, errors.New("invalid end time format")
+		return nil, errors.New("invalid start time format, use HH:MM")
+	}
+	endT, err := parseTime(req.EndTime)
+	if err != nil {
+		return nil, errors.New("invalid end time format, use HH:MM")
 	}
 
 	if !endT.After(startT) {
-		return domain.Schedule{}, errors.New("end time must be after start time")
+		return nil, errors.New("end time must be after start time")
 	}
 
-	field, err := s.fieldRepo.FindByID(ctx, fieldId)
+	field, err := s.fieldRepo.FindByID(ctx, req.FieldID)
 	if err != nil {
-		return domain.Schedule{}, err
+		logger.Error("field not found when creating schedule", err.Error())
+		return nil, errors.New("field not found")
 	}
 
 	newSchedule := domain.Schedule{
 		Field:     field,
-		DayOfWeek: dayOfWeek,
+		DayOfWeek: req.DayOfWeek,
 		StartTime: startT,
 		EndTime:   endT,
-		Price:     price,
+		Price:     req.Price,
 	}
 
 	if err := s.scheduleRepo.Create(ctx, &newSchedule); err != nil {
-		return domain.Schedule{}, err
+		logger.Error("failed to create schedule", map[string]any{
+			"field_id": req.FieldID,
+			"error":    err.Error(),
+		})
+		return nil, fmt.Errorf("failed to create schedule: %w", err)
 	}
 
-	return newSchedule, nil
+	logger.Info("schedule created successfully")
+
+	return &newSchedule, nil
 }
 
-func (s *scheduleService) UpdateSchedule(ctx context.Context, id uint, dayOfWeek int, startTime, endTime string, price float64) (domain.Schedule, error) {
+func (s *scheduleService) UpdateSchedule(ctx context.Context, id uint, dayOfWeek int, startTime, endTime string, price float64) (*domain.Schedule, error) {
+	if id == 0 || dayOfWeek == 0 || startTime == "" || endTime == "" || price == 0 {
+		logger.Error("invalid schedule update request")
+		return nil, errors.New("invalid schedule update request")
+	}
+
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("context error: %w", err)
+	}
+
 	scheduleUpdate, err := s.scheduleRepo.FindByID(ctx, id)
 	if err != nil {
-		return domain.Schedule{}, err
+		logger.Error("schedule not found when updating schedule", err.Error())
+		return nil, domain.ErrScheduleNotFound
 	}
 
-	startT, err := parseTime(startTime)
-	if err != nil {
-		return domain.Schedule{}, errors.New("invalid start time format")
+	if dayOfWeek != 0 {
+		if dayOfWeek < 1 || dayOfWeek > 7 {
+			return nil, domain.ErrInvalidDayOfWeek
+		}
+		scheduleUpdate.DayOfWeek = dayOfWeek
 	}
 
-	endT, err := parseTime(endTime)
-	if err != nil {
-		return domain.Schedule{}, errors.New("invalid end time format")
+	if startTime != "" {
+		startT, err := parseTime(startTime)
+		if err != nil {
+			return nil, errors.New("invalid start time format")
+		}
+		scheduleUpdate.StartTime = startT
 	}
 
-	if !endT.After(startT) {
-		return domain.Schedule{}, errors.New("end time must be after start time")
+	if endTime != "" {
+		endT, err := parseTime(endTime)
+		if err != nil {
+			return nil, errors.New("invalid end time format")
+		}
+		scheduleUpdate.EndTime = endT
 	}
 
-	scheduleUpdate.DayOfWeek = dayOfWeek
-	scheduleUpdate.StartTime = startT
-	scheduleUpdate.EndTime = endT
-	scheduleUpdate.Price = price
+	if price != 0 {
+		if price <= 0 {
+			return nil, domain.ErrInvalidPrice
+		}
+		scheduleUpdate.Price = price
+	}
 
 	if err := s.scheduleRepo.Update(ctx, &scheduleUpdate); err != nil {
-		return domain.Schedule{}, err
+		logger.Error("failed to update schedule", map[string]any{
+			"schedule_id": id,
+			"error":       err.Error(),
+		})
+		return nil, fmt.Errorf("failed to update schedule: %w", err)
 	}
 
-	return scheduleUpdate, nil
+	logger.Info("schedule update successfully")
+
+	return &scheduleUpdate, nil
 }
 
 func (s *scheduleService) DeleteSchedule(ctx context.Context, id uint) error {
+	if id == 0 {
+		return errors.New("invalid schedule id")
+	}
+
+	if err := ctx.Err(); err != nil {
+		return fmt.Errorf("context error: %w", err)
+	}
+
 	if _, err := s.scheduleRepo.FindByID(ctx, id); err != nil {
-		return err
+		return domain.ErrScheduleNotFound
 	}
 
 	err := s.scheduleRepo.Delete(ctx, id)
 	if err != nil {
-		return err
+		logger.Error("failed to delete schedule", map[string]any{
+			"schedule_id": id,
+			"error":       err.Error(),
+		})
+		return fmt.Errorf("failed to delete schedule: %w", err)
 	}
 
 	return nil

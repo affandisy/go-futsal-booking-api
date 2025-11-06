@@ -2,44 +2,45 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"go-futsal-booking-api/internal/domain"
+	"go-futsal-booking-api/internal/dto/request"
 	"go-futsal-booking-api/internal/repository"
 	"go-futsal-booking-api/pkg/logger"
 )
 
-var (
-	ErrFieldNotFound     = errors.New("field not found")
-	ErrVenueNotFound     = errors.New("venue not found")
-	ErrInvalidFieldData  = errors.New("invalid field data")
-	ErrFieldTypeNotFound = errors.New("field type not found")
-)
-
 type FieldService interface {
 	GetFieldByID(ctx context.Context, id uint) (*domain.Field, error)
-	GetFieldsByVenue(ctx context.Context, venueID uint) ([]domain.Field, error)
-	CreateField(ctx context.Context, venueID uint, name, fieldType string) (*domain.Field, error)
+	GetFieldsByVenue(ctx context.Context, venueID uint) ([]*domain.Field, error)
+	CreateField(ctx context.Context, req *request.CreateFieldRequest) (*domain.Field, error)
 	UpdateField(ctx context.Context, id uint, name, fieldType string) (*domain.Field, error)
 	DeleteField(ctx context.Context, id uint) error
 }
 
 type fieldService struct {
-	fieldRepo repository.FieldRepository
-	venueRepo repository.VenueRepository
+	fieldRepo    repository.FieldRepository
+	venueRepo    repository.VenueRepository
+	scheduleRepo repository.ScheduleRepository
 }
 
-func NewFieldService(fieldRepo repository.FieldRepository, venueRepo repository.VenueRepository) FieldService {
+// type CreateFieldRequest struct {
+// 	VenueID   uint
+// 	FieldType string
+// 	Name      string
+// }
+
+func NewFieldService(fieldRepo repository.FieldRepository, venueRepo repository.VenueRepository, scheduleRepo repository.ScheduleRepository) FieldService {
 	return &fieldService{
-		fieldRepo: fieldRepo,
-		venueRepo: venueRepo,
+		fieldRepo:    fieldRepo,
+		venueRepo:    venueRepo,
+		scheduleRepo: scheduleRepo,
 	}
 }
 
 func (s *fieldService) GetFieldByID(ctx context.Context, id uint) (*domain.Field, error) {
 	if id == 0 {
 		logger.Error("Invalid field id")
-		return nil, ErrInvalidFieldData
+		return nil, domain.ErrInvalidFieldData
 	}
 
 	if err := ctx.Err(); err != nil {
@@ -56,10 +57,10 @@ func (s *fieldService) GetFieldByID(ctx context.Context, id uint) (*domain.Field
 	return &field, nil
 }
 
-func (s *fieldService) GetFieldsByVenue(ctx context.Context, venueID uint) ([]domain.Field, error) {
+func (s *fieldService) GetFieldsByVenue(ctx context.Context, venueID uint) ([]*domain.Field, error) {
 	if venueID == 0 {
 		logger.Error("Invalid venue id")
-		return nil, ErrInvalidFieldData
+		return nil, domain.ErrInvalidFieldData
 	}
 
 	if err := ctx.Err(); err != nil {
@@ -70,7 +71,7 @@ func (s *fieldService) GetFieldsByVenue(ctx context.Context, venueID uint) ([]do
 	_, err := s.venueRepo.FindByID(ctx, venueID)
 	if err != nil {
 		logger.Error("failed to find venue by id", err)
-		return nil, ErrVenueNotFound
+		return nil, domain.ErrVenueNotFound
 	}
 
 	fields, err := s.fieldRepo.FindByVenueID(ctx, venueID)
@@ -79,13 +80,18 @@ func (s *fieldService) GetFieldsByVenue(ctx context.Context, venueID uint) ([]do
 		return nil, err
 	}
 
-	return fields, nil
+	field := make([]*domain.Field, len(fields))
+	for i := range fields {
+		field[i] = &fields[i]
+	}
+
+	return field, nil
 }
 
-func (s *fieldService) CreateField(ctx context.Context, venueID uint, name, fieldType string) (*domain.Field, error) {
-	if venueID == 0 || fieldType == "" {
+func (s *fieldService) CreateField(ctx context.Context, req *request.CreateFieldRequest) (*domain.Field, error) {
+	if req.VenueID == 0 || req.FieldType == "" {
 		logger.Error("Invalid venue id and field type")
-		return nil, ErrInvalidFieldData
+		return nil, domain.ErrInvalidFieldData
 	}
 
 	if err := ctx.Err(); err != nil {
@@ -93,15 +99,15 @@ func (s *fieldService) CreateField(ctx context.Context, venueID uint, name, fiel
 		return nil, fmt.Errorf("context error: %w", err)
 	}
 
-	venue, err := s.venueRepo.FindByID(ctx, venueID)
+	venue, err := s.venueRepo.FindByID(ctx, req.VenueID)
 	if err != nil {
 		logger.Error("venue not found", err)
-		return nil, ErrVenueNotFound
+		return nil, domain.ErrVenueNotFound
 	}
 
 	newField := &domain.Field{
-		Name:  name,
-		Type:  fieldType,
+		Name:  req.Name,
+		Type:  req.FieldType,
 		Venue: venue,
 	}
 
@@ -118,7 +124,7 @@ func (s *fieldService) CreateField(ctx context.Context, venueID uint, name, fiel
 func (s *fieldService) UpdateField(ctx context.Context, id uint, name, fieldType string) (*domain.Field, error) {
 	if id == 0 || name == "" || fieldType == "" {
 		logger.Error("Invalid field data")
-		return nil, ErrInvalidFieldData
+		return nil, domain.ErrInvalidFieldData
 	}
 
 	if err := ctx.Err(); err != nil {
@@ -129,7 +135,7 @@ func (s *fieldService) UpdateField(ctx context.Context, id uint, name, fieldType
 	fieldUpdate, err := s.fieldRepo.FindByID(ctx, id)
 	if err != nil {
 		logger.Error("field not found", err)
-		return nil, ErrFieldNotFound
+		return nil, domain.ErrFieldNotFound
 	}
 
 	fieldUpdate.Name = name
@@ -148,7 +154,7 @@ func (s *fieldService) UpdateField(ctx context.Context, id uint, name, fieldType
 func (s *fieldService) DeleteField(ctx context.Context, id uint) error {
 	if id == 0 {
 		logger.Error("Invalid field id when deleting field")
-		return ErrInvalidFieldData
+		return domain.ErrInvalidFieldData
 	}
 
 	if err := ctx.Err(); err != nil {
@@ -159,7 +165,7 @@ func (s *fieldService) DeleteField(ctx context.Context, id uint) error {
 	_, err := s.fieldRepo.FindByID(ctx, id)
 	if err != nil {
 		logger.Error("field not found", err)
-		return ErrFieldNotFound
+		return domain.ErrFieldNotFound
 	}
 
 	if err := s.fieldRepo.Delete(ctx, id); err != nil {
