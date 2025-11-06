@@ -57,16 +57,22 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	fieldRepo := repository.NewFieldRepository(db)
 	venueRepo := repository.NewVenueRepository(db)
+	scheduleRepo := repository.NewScheduleRepository(db)
+	bookingRepo := repository.NewBookingRepository(db)
 
 	// Init service
 	userService := service.NewUserService(userRepo, validate, mailjetEmail, cfg.App.AppEmailVerificationKey, cfg.App.AppDeploymentUrl)
 	fieldService := service.NewFieldService(fieldRepo, venueRepo)
 	venueService := service.NewVenueService(venueRepo)
+	scheduleService := service.NewScheduleService(scheduleRepo, fieldRepo)
+	bookingService := service.NewBookingService(bookingRepo, scheduleRepo)
 
 	// Init handler
 	userHandler := handler.NewUserHandler(userService)
 	fieldHandler := handler.NewFieldHandler(fieldService)
 	venueHandler := handler.NewVenueHandler(venueService)
+	scheduleHandler := handler.NewScheduleHandler(scheduleService)
+	bookingHandler := handler.NewBookingHandler(bookingService)
 
 	// Init echo
 	e := echo.New()
@@ -89,6 +95,8 @@ func main() {
 	router.SetupUserRoutes(api, userHandler)
 	router.SetupFieldRoutes(api, fieldHandler)
 	router.SetupVenueRoutes(api, venueHandler)
+	router.SetupScheduleRoutes(api, scheduleHandler)
+	router.SetupBookingRoutes(api, bookingHandler)
 
 	// Goroutine server
 	go func() {

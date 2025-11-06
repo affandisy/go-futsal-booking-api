@@ -31,3 +31,21 @@ func SetupVenueRoutes(api *echo.Group, handler *handler.VenueHandler) {
 	venues.PUT("/:id", handler.UpdateVenue)
 	venues.DELETE("/:id", handler.DeleteVenue)
 }
+
+func SetupScheduleRoutes(api *echo.Group, handler *handler.ScheduleHandler) {
+	schedules := api.Group("/schedules")
+	schedules.GET("", handler.GetScheduleByField)
+	schedules.GET("/:id", handler.GetScheduleByID)
+
+	schedules.POST("", handler.CreateSchedule)
+	schedules.PUT("/:id", handler.UpdateSchedule)
+	schedules.DELETE("/:id", handler.DeleteSchedule)
+}
+
+func SetupBookingRoutes(api *echo.Group, handler *handler.BookingHandler) {
+	bookings := api.Group("/bookings")
+	bookings.GET("/:id", handler.GetMyBookings)
+	bookings.GET("", handler.GetBookingDetails)
+
+	bookings.POST("", handler.CreateBooking)
+}
