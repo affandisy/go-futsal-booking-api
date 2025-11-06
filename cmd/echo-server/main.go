@@ -55,12 +55,18 @@ func main() {
 
 	// Init repo
 	userRepo := repository.NewUserRepository(db)
+	fieldRepo := repository.NewFieldRepository(db)
+	venueRepo := repository.NewVenueRepository(db)
 
 	// Init service
 	userService := service.NewUserService(userRepo, validate, mailjetEmail, cfg.App.AppEmailVerificationKey, cfg.App.AppDeploymentUrl)
+	fieldService := service.NewFieldService(fieldRepo, venueRepo)
+	venueService := service.NewVenueService(venueRepo)
 
 	// Init handler
 	userHandler := handler.NewUserHandler(userService)
+	fieldHandler := handler.NewFieldHandler(fieldService)
+	venueHandler := handler.NewVenueHandler(venueService)
 
 	// Init echo
 	e := echo.New()
@@ -81,6 +87,8 @@ func main() {
 	// Setup routes
 	api := e.Group("/api/v1")
 	router.SetupUserRoutes(api, userHandler)
+	router.SetupFieldRoutes(api, fieldHandler)
+	router.SetupVenueRoutes(api, venueHandler)
 
 	// Goroutine server
 	go func() {
