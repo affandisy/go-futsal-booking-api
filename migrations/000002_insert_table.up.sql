@@ -56,3 +56,9 @@ INSERT INTO payments (id, booking_id, payment_method, amount, status)
 VALUES
     (1, 1, 'E_WALLET', 150000.00, 'SUCCESS'),
     (2, 2, 'CASH', 120000.00, 'SUCCESS');
+
+SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users));
+SELECT setval(pg_get_serial_sequence('venues', 'id'), (SELECT MAX(id) FROM venues));
+SELECT setval(pg_get_serial_sequence('fields', 'id'), (SELECT MAX(id) FROM fields));
+SELECT setval(pg_get_serial_sequence('schedules', 'id'), (SELECT MAX(id) FROM schedules));
+SELECT setval(pg_get_serial_sequence('bookings', 'id'), (SELECT MAX(id) FROM bookings));

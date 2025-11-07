@@ -31,6 +31,7 @@ func TestBookingService_CreateBooking(t *testing.T) {
 
 	t.Run("Success - Create booking", func(t *testing.T) {
 		ctx := context.Background()
+		userID := uint(1)
 
 		// Tomorrow's date
 		tomorrow := time.Now().Add(24 * time.Hour)
@@ -41,7 +42,6 @@ func TestBookingService_CreateBooking(t *testing.T) {
 		}
 
 		req := &request.CreateBookingRequest{
-			UserID:      1,
 			ScheduleID:  1,
 			BookingDate: bookingDate,
 		}
@@ -80,7 +80,7 @@ func TestBookingService_CreateBooking(t *testing.T) {
 			Return(schedule, nil)
 
 		mockUserRepo.EXPECT().
-			FindByID(ctx, req.UserID).
+			FindByID(ctx, userID).
 			Return(user, nil)
 
 		mockBookingRepo.EXPECT().
@@ -91,7 +91,7 @@ func TestBookingService_CreateBooking(t *testing.T) {
 				return nil
 			})
 
-		result, err := bookingService.CreateBooking(ctx, req)
+		result, err := bookingService.CreateBooking(ctx, req, userID)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -103,7 +103,7 @@ func TestBookingService_CreateBooking(t *testing.T) {
 	t.Run("Fail - Invalid booking request (nil)", func(t *testing.T) {
 		ctx := context.Background()
 
-		result, err := bookingService.CreateBooking(ctx, nil)
+		result, err := bookingService.CreateBooking(ctx, nil, 1)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -114,12 +114,11 @@ func TestBookingService_CreateBooking(t *testing.T) {
 		ctx := context.Background()
 
 		req := &request.CreateBookingRequest{
-			UserID:      0,
 			ScheduleID:  1,
 			BookingDate: "2024-12-01",
 		}
 
-		result, err := bookingService.CreateBooking(ctx, req)
+		result, err := bookingService.CreateBooking(ctx, req, 0)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -130,12 +129,11 @@ func TestBookingService_CreateBooking(t *testing.T) {
 		ctx := context.Background()
 
 		req := &request.CreateBookingRequest{
-			UserID:      1,
 			ScheduleID:  1,
 			BookingDate: "invalid-date",
 		}
 
-		result, err := bookingService.CreateBooking(ctx, req)
+		result, err := bookingService.CreateBooking(ctx, req, 1)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -149,12 +147,11 @@ func TestBookingService_CreateBooking(t *testing.T) {
 		pastDate := yesterday.Format("2006-01-02")
 
 		req := &request.CreateBookingRequest{
-			UserID:      1,
 			ScheduleID:  1,
 			BookingDate: pastDate,
 		}
 
-		result, err := bookingService.CreateBooking(ctx, req)
+		result, err := bookingService.CreateBooking(ctx, req, 1)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -168,7 +165,6 @@ func TestBookingService_CreateBooking(t *testing.T) {
 		bookingDate := tomorrow.Format("2006-01-02")
 
 		req := &request.CreateBookingRequest{
-			UserID:      1,
 			ScheduleID:  999,
 			BookingDate: bookingDate,
 		}
@@ -177,7 +173,7 @@ func TestBookingService_CreateBooking(t *testing.T) {
 			FindByID(ctx, req.ScheduleID).
 			Return(domain.Schedule{}, domain.ErrScheduleNotFound)
 
-		result, err := bookingService.CreateBooking(ctx, req)
+		result, err := bookingService.CreateBooking(ctx, req, 1)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -201,7 +197,6 @@ func TestBookingService_CreateBooking(t *testing.T) {
 		}
 
 		req := &request.CreateBookingRequest{
-			UserID:      1,
 			ScheduleID:  1,
 			BookingDate: bookingDate,
 		}
@@ -216,7 +211,7 @@ func TestBookingService_CreateBooking(t *testing.T) {
 			FindByID(ctx, req.ScheduleID).
 			Return(schedule, nil)
 
-		result, err := bookingService.CreateBooking(ctx, req)
+		result, err := bookingService.CreateBooking(ctx, req, 1)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -225,6 +220,7 @@ func TestBookingService_CreateBooking(t *testing.T) {
 
 	t.Run("Fail - User not found", func(t *testing.T) {
 		ctx := context.Background()
+		userID := uint(999)
 
 		tomorrow := time.Now().Add(24 * time.Hour)
 		bookingDate := tomorrow.Format("2006-01-02")
@@ -234,7 +230,6 @@ func TestBookingService_CreateBooking(t *testing.T) {
 		}
 
 		req := &request.CreateBookingRequest{
-			UserID:      999,
 			ScheduleID:  1,
 			BookingDate: bookingDate,
 		}
@@ -250,10 +245,10 @@ func TestBookingService_CreateBooking(t *testing.T) {
 			Return(schedule, nil)
 
 		mockUserRepo.EXPECT().
-			FindByID(ctx, req.UserID).
+			FindByID(ctx, userID).
 			Return(domain.User{}, errors.New("user not found"))
 
-		result, err := bookingService.CreateBooking(ctx, req)
+		result, err := bookingService.CreateBooking(ctx, req, userID)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -262,6 +257,7 @@ func TestBookingService_CreateBooking(t *testing.T) {
 
 	t.Run("Fail - Database error on create", func(t *testing.T) {
 		ctx := context.Background()
+		userID := uint(1)
 
 		tomorrow := time.Now().Add(24 * time.Hour)
 		bookingDate := tomorrow.Format("2006-01-02")
@@ -271,7 +267,6 @@ func TestBookingService_CreateBooking(t *testing.T) {
 		}
 
 		req := &request.CreateBookingRequest{
-			UserID:      1,
 			ScheduleID:  1,
 			BookingDate: bookingDate,
 		}
@@ -292,14 +287,14 @@ func TestBookingService_CreateBooking(t *testing.T) {
 			Return(schedule, nil)
 
 		mockUserRepo.EXPECT().
-			FindByID(ctx, req.UserID).
+			FindByID(ctx, userID).
 			Return(user, nil)
 
 		mockBookingRepo.EXPECT().
 			Create(ctx, gomock.Any()).
 			Return(errors.New("database error"))
 
-		result, err := bookingService.CreateBooking(ctx, req)
+		result, err := bookingService.CreateBooking(ctx, req, userID)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)

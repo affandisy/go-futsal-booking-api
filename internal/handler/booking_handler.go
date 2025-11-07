@@ -78,10 +78,11 @@ func (h *BookingHandler) CreateBooking(c echo.Context) error {
 	newBooking, err := h.bookingService.CreateBooking(
 		ctx,
 		&request.CreateBookingRequest{
-			UserID:      userID,
+			// UserID:      userID,
 			ScheduleID:  req.ScheduleID,
 			BookingDate: req.BookingDate,
 		},
+		userID,
 	)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -131,7 +132,7 @@ func (h *BookingHandler) GetMyBookings(c echo.Context) error {
 	if userIdStr == "" {
 		logger.Error("missing user_id query parameter")
 		return c.JSON(http.StatusBadRequest, jsonres.Error(
-			"BAD_REQUEST", "Invalid user id", map[string]interface{}{"id": userIdStr},
+			"BAD_REQUEST", "missing user_id query parameter", map[string]interface{}{"id": userIdStr},
 		))
 	}
 

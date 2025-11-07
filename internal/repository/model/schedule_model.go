@@ -11,8 +11,8 @@ type ScheduleGorm struct {
 	ID        uint      `gorm:"primaryKey"`
 	FieldID   uint      `gorm:"column:field_id;not null"`
 	DayOfWeek int       `gorm:"column:day_of_week;not null"`
-	StartTime time.Time `gorm:"column:start_time;type:time;not null"`
-	EndTime   time.Time `gorm:"column:end_time;type:tiem;not null"`
+	StartTime TimeOfDay `gorm:"column:start_time;type:time;not null"`
+	EndTime   TimeOfDay `gorm:"column:end_time;type:time;not null"`
 	Price     float64   `gorm:"column:price;type:numeric(10,2);not null"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -35,8 +35,8 @@ func (sg *ScheduleGorm) ToDomain() domain.Schedule {
 	return domain.Schedule{
 		ID:        sg.ID,
 		DayOfWeek: sg.DayOfWeek,
-		StartTime: sg.StartTime,
-		EndTime:   sg.EndTime,
+		StartTime: sg.StartTime.ToTime(),
+		EndTime:   sg.EndTime.ToTime(),
 		Price:     sg.Price,
 		CreatedAt: sg.CreatedAt,
 		UpdatedAt: sg.UpdatedAt,
@@ -49,7 +49,7 @@ func (sg *ScheduleGorm) FromDomain(s domain.Schedule) {
 	sg.ID = s.ID
 	sg.FieldID = s.Field.ID
 	sg.DayOfWeek = s.DayOfWeek
-	sg.StartTime = s.StartTime
-	sg.EndTime = s.EndTime
+	sg.StartTime = NewTimeOfDay(s.StartTime)
+	sg.EndTime = NewTimeOfDay(s.EndTime)
 	sg.Price = s.Price
 }

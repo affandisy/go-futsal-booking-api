@@ -12,7 +12,7 @@ import (
 )
 
 type BookingService interface {
-	CreateBooking(ctx context.Context, req *request.CreateBookingRequest) (*domain.Booking, error)
+	CreateBooking(ctx context.Context, req *request.CreateBookingRequest, userID uint) (*domain.Booking, error)
 	GetMyBookings(ctx context.Context, userID uint) ([]*domain.Booking, error)
 	GetBookingByID(ctx context.Context, bookingID uint) (*domain.Booking, error)
 	CancelBooking(ctx context.Context, bookingID uint, userID uint) error
@@ -42,8 +42,8 @@ func parseDate(dateStr string) (time.Time, error) {
 	return time.Parse("2006-01-02", dateStr)
 }
 
-func (s *bookingService) CreateBooking(ctx context.Context, req *request.CreateBookingRequest) (*domain.Booking, error) {
-	if req == nil || req.UserID == 0 || req.ScheduleID == 0 || req.BookingDate == "" {
+func (s *bookingService) CreateBooking(ctx context.Context, req *request.CreateBookingRequest, userId uint) (*domain.Booking, error) {
+	if req == nil || userId == 0 || req.ScheduleID == 0 || req.BookingDate == "" {
 		return nil, errors.New("invalid booking request")
 	}
 
@@ -75,16 +75,16 @@ func (s *bookingService) CreateBooking(ctx context.Context, req *request.CreateB
 		bookingDayOfWeek = 7
 	}
 
-	if schedule.DayOfWeek != bookingDayOfWeek {
-		logger.Warn("day mistmatch", map[string]any{
-			"booking_date":        bookDate,
-			"booking_day_of_week": bookingDayOfWeek,
-			"schedule_day":        schedule.DayOfWeek,
-		})
-		return nil, domain.ErrDayMistmatch
-	}
+	// if schedule.DayOfWeek != bookingDayOfWeek {
+	// 	logger.Warn("day mistmatch", map[string]any{
+	// 		"booking_date":        bookDate,
+	// 		"booking_day_of_week": bookingDayOfWeek,
+	// 		"schedule_day":        schedule.DayOfWeek,
+	// 	})
+	// 	return nil, domain.ErrDayMistmatch
+	// }
 
-	user, err := s.userRepo.FindByID(ctx, req.UserID)
+	user, err := s.userRepo.FindByID(ctx, userId)
 	if err != nil {
 		logger.Error("user not found", err.Error())
 		return nil, errors.New("user not found")
