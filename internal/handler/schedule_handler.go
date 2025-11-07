@@ -15,6 +15,10 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+
+	_ "go-futsal-booking-api/docs"
+	// _ "go-futsal-booking-api/internal/dto/request"
+	// _ "go-futsal-booking-api/internal/dto/response"
 )
 
 type ScheduleHandler struct {
@@ -29,6 +33,19 @@ func NewScheduleHandler(scheduleService service.ScheduleService) *ScheduleHandle
 	}
 }
 
+// GetScheduleByID godoc
+// @Summary Get schedule by ID
+// @Description Get details of a specific schedule by its ID
+// @Tags Schedules
+// @Produce json
+// @Param id path uint true "Schedule ID"
+// @Success 200 {object} docs.SuccessResponse{data=dto.ScheduleResponse} "Schedule retrieved successfully"
+// @Failure 400 {object} docs.ErrorResponse "Invalid Schedule ID"
+// @Failure 401 {object} docs.ErrorResponse "Unauthorized (Missing Token)"
+// @Failure 404 {object} docs.ErrorResponse "Schedule Not Found"
+// @Failure 500 {object} docs.ErrorResponse "Internal Server Error"
+// @Security ApiKeyAuth
+// @Router /schedules/{id} [get]
 func (h *ScheduleHandler) GetScheduleByID(c echo.Context) error {
 	scheduleIdStr := c.Param("id")
 
@@ -76,6 +93,19 @@ func (h *ScheduleHandler) GetScheduleByID(c echo.Context) error {
 	))
 }
 
+// GetScheduleByField godoc
+// @Summary Get schedules by field ID
+// @Description Get a list of all schedules associated with a specific field
+// @Tags Schedules
+// @Produce json
+// @Param fieldId query uint true "Field ID"
+// @Success 200 {object} docs.SuccessResponse{data=[]dto.ScheduleResponse} "Schedule retrieved successfully"
+// @Failure 400 {object} docs.ErrorResponse "Missing or Invalid Field ID"
+// @Failure 401 {object} docs.ErrorResponse "Unauthorized (Missing Token)"
+// @Failure 404 {object} docs.ErrorResponse "Field Not Found"
+// @Failure 500 {object} docs.ErrorResponse "Internal Server Error"
+// @Security ApiKeyAuth
+// @Router /schedules [get]
 func (h *ScheduleHandler) GetScheduleByField(c echo.Context) error {
 	// fieldIdStr := c.Param("id")
 
@@ -137,6 +167,21 @@ func (h *ScheduleHandler) GetScheduleByField(c echo.Context) error {
 	))
 }
 
+// CreateSchedule godoc
+// @Summary Create a new schedule (Admin only)
+// @Description Create a new weekly schedule for a specific field
+// @Tags Schedules
+// @Accept json
+// @Produce json
+// @Param schedule body request.CreateScheduleRequest true "Schedule creation request"
+// @Success 201 {object} docs.SuccessResponse{data=dto.ScheduleResponse} "Schedule successfully created"
+// @Failure 400 {object} docs.ErrorResponse "Bad Request or Validation Error"
+// @Failure 401 {object} docs.ErrorResponse "Unauthorized (Missing Token)"
+// @Failure 403 {object} docs.ErrorResponse "Forbidden (Not Admin)"
+// @Failure 404 {object} docs.ErrorResponse "Field Not Found"
+// @Failure 500 {object} docs.ErrorResponse "Internal Server Error"
+// @Security ApiKeyAuth
+// @Router /schedules [post]
 func (h *ScheduleHandler) CreateSchedule(c echo.Context) error {
 	var req request.CreateScheduleRequest
 
@@ -196,6 +241,22 @@ func (h *ScheduleHandler) CreateSchedule(c echo.Context) error {
 	))
 }
 
+// UpdateSchedule godoc
+// @Summary Update a schedule (Admin only)
+// @Description Update details of an existing schedule
+// @Tags Schedules
+// @Accept json
+// @Produce json
+// @Param id path uint true "Schedule ID"
+// @Param schedule body request.UpdateScheduleRequest true "Schedule update request"
+// @Success 200 {object} docs.SuccessResponse{data=dto.ScheduleResponse} "Schedule successfully updated"
+// @Failure 400 {object} docs.ErrorResponse "Bad Request, Invalid ID, or Validation Error"
+// @Failure 401 {object} docs.ErrorResponse "Unauthorized (Missing Token)"
+// @Failure 403 {object} docs.ErrorResponse "Forbidden (Not Admin)"
+// @Failure 404 {object} docs.ErrorResponse "Schedule Not Found"
+// @Failure 500 {object} docs.ErrorResponse "Internal Server Error"
+// @Security ApiKeyAuth
+// @Router /schedules/{id} [put]
 func (h *ScheduleHandler) UpdateSchedule(c echo.Context) error {
 	scheduleIdStr := c.Param("id")
 
@@ -262,6 +323,20 @@ func (h *ScheduleHandler) UpdateSchedule(c echo.Context) error {
 	))
 }
 
+// DeleteSchedule godoc
+// @Summary Delete a schedule (Admin only)
+// @Description Delete an existing schedule by its ID
+// @Tags Schedules
+// @Produce json
+// @Param id path uint true "Schedule ID"
+// @Success 200 {object} docs.SuccessResponse "Schedule deleted successfully"
+// @Failure 400 {object} docs.ErrorResponse "Invalid Schedule ID"
+// @Failure 401 {object} docs.ErrorResponse "Unauthorized (Missing Token)"
+// @Failure 403 {object} docs.ErrorResponse "Forbidden (Not Admin)"
+// @Failure 404 {object} docs.ErrorResponse "Schedule Not Found"
+// @Failure 500 {object} docs.ErrorResponse "Internal Server Error"
+// @Security ApiKeyAuth
+// @Router /schedules/{id} [delete]
 func (h *ScheduleHandler) DeleteSchedule(c echo.Context) error {
 	scheduleIdStr := c.Param("id")
 

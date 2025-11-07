@@ -19,10 +19,26 @@ import (
 	"syscall"
 	"time"
 
+	_ "go-futsal-booking-api/docs"
+
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
+// @title Futsal Booking API
+// @version 1.0
+// @description This is a REST API for a Futsal Booking application.
+// @termsOfService http://swagger.io/terms/
+// @contact.name API Support
+// @contact.email support@example.com
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @host localhost:8080
+// @BasePath /api/v1
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
@@ -93,6 +109,9 @@ func main() {
 	// Auth middleware
 	authRequired := middleware.AuthMiddleware()
 	adminOnly := middleware.AdminOnly()
+
+	// Swagger Documentation
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Setup routes
 	api := e.Group("/api/v1")

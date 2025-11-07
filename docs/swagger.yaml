@@ -1,0 +1,1147 @@
+basePath: /api/v1
+definitions:
+  docs.ErrorResponse:
+    properties:
+      details: {}
+      error:
+        example: ERROR_CODE
+        type: string
+      message:
+        example: An error occurred
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  docs.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        example: Operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  go-futsal-booking-api_internal_dto_request.CreateBookingRequest:
+    properties:
+      booking_date:
+        type: string
+      schedule_id:
+        type: integer
+      status:
+        type: string
+      total_price:
+        type: number
+      user_id:
+        type: integer
+    required:
+    - booking_date
+    - schedule_id
+    - total_price
+    - user_id
+    type: object
+  go-futsal-booking-api_internal_dto_request.CreateFieldRequest:
+    properties:
+      field_type:
+        type: string
+      name:
+        type: string
+      venue_id:
+        type: integer
+    required:
+    - field_type
+    - name
+    - venue_id
+    type: object
+  go-futsal-booking-api_internal_dto_request.CreateScheduleRequest:
+    properties:
+      day_of_week:
+        type: integer
+      end_time:
+        type: string
+      field_id:
+        type: integer
+      price:
+        type: number
+      start_time:
+        type: string
+    required:
+    - day_of_week
+    - end_time
+    - field_id
+    - price
+    type: object
+  go-futsal-booking-api_internal_dto_request.CreateVenueRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      name:
+        type: string
+    required:
+    - address
+    - city
+    - name
+    type: object
+  go-futsal-booking-api_internal_dto_request.UpdateFieldRequest:
+    properties:
+      field_type:
+        type: string
+      name:
+        type: string
+    required:
+    - field_type
+    - name
+    type: object
+  go-futsal-booking-api_internal_dto_request.UpdateScheduleRequest:
+    properties:
+      day_of_week:
+        type: integer
+      end_time:
+        type: string
+      field_id:
+        type: integer
+      price:
+        type: number
+      start_time:
+        type: string
+    required:
+    - day_of_week
+    - end_time
+    - field_id
+    - price
+    type: object
+  go-futsal-booking-api_internal_dto_request.UpdateVenueRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      name:
+        type: string
+    required:
+    - address
+    - city
+    - name
+    type: object
+  go-futsal-booking-api_internal_dto_request.UserLoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  go-futsal-booking-api_internal_dto_request.UserRegisterRequest:
+    properties:
+      address:
+        type: string
+      age:
+        minimum: 15
+        type: integer
+      email:
+        type: string
+      full_name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - address
+    - age
+    - email
+    - full_name
+    - password
+    type: object
+  go-futsal-booking-api_internal_dto_response.BookingResponse:
+    properties:
+      booking_date:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      schedule_id:
+        type: integer
+      status:
+        type: string
+      total_price:
+        type: number
+      user_id:
+        type: integer
+    type: object
+  go-futsal-booking-api_internal_dto_response.FieldResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      type:
+        type: string
+      venue:
+        type: string
+    type: object
+  go-futsal-booking-api_internal_dto_response.LoginResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.UserResponse'
+    type: object
+  go-futsal-booking-api_internal_dto_response.ScheduleResponse:
+    properties:
+      created_at:
+        type: string
+      day_of_week:
+        type: integer
+      end_time:
+        type: string
+      field_id:
+        type: integer
+      id:
+        type: integer
+      price:
+        type: number
+      start_time:
+        type: string
+    type: object
+  go-futsal-booking-api_internal_dto_response.UserResponse:
+    properties:
+      address:
+        type: string
+      age:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: integer
+    type: object
+  go-futsal-booking-api_internal_dto_response.VenueResponse:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+  description: This is a REST API for a Futsal Booking application.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Futsal Booking API
+  version: "1.0"
+paths:
+  /bookings:
+    get:
+      description: Get a list of all bookings for a specific user (e.g., "My Bookings")
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bookings retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.BookingResponse'
+                  type: array
+              type: object
+        "400":
+          description: Missing or Invalid User ID
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: User Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get bookings by user ID
+      tags:
+      - Bookings
+    post:
+      consumes:
+      - application/json
+      description: Create a new booking for a specific schedule (Customer or Admin)
+      parameters:
+      - description: Booking creation request
+        in: body
+        name: booking
+        required: true
+        schema:
+          $ref: '#/definitions/go-futsal-booking-api_internal_dto_request.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Booking successfully created
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.BookingResponse'
+              type: object
+        "400":
+          description: Bad Request or Validation Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Schedule Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new booking
+      tags:
+      - Bookings
+  /bookings/{id}:
+    get:
+      description: Get details of a specific booking by its ID
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Booking retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.BookingResponse'
+              type: object
+        "400":
+          description: Invalid Booking ID
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Booking Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get booking details by ID
+      tags:
+      - Bookings
+  /fields:
+    get:
+      description: Get a list of all fields associated with a specific venue
+      parameters:
+      - description: Venue ID
+        in: query
+        name: venueId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Field retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.FieldResponse'
+                  type: array
+              type: object
+        "400":
+          description: Missing or Invalid Venue ID
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Venue Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get fields by venue ID
+      tags:
+      - Fields
+    post:
+      consumes:
+      - application/json
+      description: Create a new field for a specific venue
+      parameters:
+      - description: Field creation request
+        in: body
+        name: field
+        required: true
+        schema:
+          $ref: '#/definitions/go-futsal-booking-api_internal_dto_request.CreateFieldRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Field successfully created
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.FieldResponse'
+              type: object
+        "400":
+          description: Bad Request or Validation Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "403":
+          description: Forbidden (Not Admin)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Venue Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new field (Admin only)
+      tags:
+      - Fields
+  /fields/{id}:
+    delete:
+      description: Delete an existing field by its ID
+      parameters:
+      - description: Field ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Field deleted successfully
+          schema:
+            $ref: '#/definitions/docs.SuccessResponse'
+        "400":
+          description: Invalid Field ID
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "403":
+          description: Forbidden (Not Admin)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Field Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a field (Admin only)
+      tags:
+      - Fields
+    get:
+      description: Get details of a specific field by its ID
+      parameters:
+      - description: Field ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Field retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.FieldResponse'
+              type: object
+        "400":
+          description: Invalid Field ID
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Field Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get field by ID
+      tags:
+      - Fields
+    put:
+      consumes:
+      - application/json
+      description: Update details of an existing field
+      parameters:
+      - description: Field ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Field update request
+        in: body
+        name: field
+        required: true
+        schema:
+          $ref: '#/definitions/go-futsal-booking-api_internal_dto_request.UpdateFieldRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Field successfully updated
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.FieldResponse'
+              type: object
+        "400":
+          description: Bad Request, Invalid ID, or Validation Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "403":
+          description: Forbidden (Not Admin)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Field Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a field (Admin only)
+      tags:
+      - Fields
+  /schedules:
+    get:
+      description: Get a list of all schedules associated with a specific field
+      parameters:
+      - description: Field ID
+        in: query
+        name: fieldId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Schedule retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.ScheduleResponse'
+                  type: array
+              type: object
+        "400":
+          description: Missing or Invalid Field ID
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Field Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get schedules by field ID
+      tags:
+      - Schedules
+    post:
+      consumes:
+      - application/json
+      description: Create a new weekly schedule for a specific field
+      parameters:
+      - description: Schedule creation request
+        in: body
+        name: schedule
+        required: true
+        schema:
+          $ref: '#/definitions/go-futsal-booking-api_internal_dto_request.CreateScheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Schedule successfully created
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.ScheduleResponse'
+              type: object
+        "400":
+          description: Bad Request or Validation Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "403":
+          description: Forbidden (Not Admin)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Field Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new schedule (Admin only)
+      tags:
+      - Schedules
+  /schedules/{id}:
+    delete:
+      description: Delete an existing schedule by its ID
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Schedule deleted successfully
+          schema:
+            $ref: '#/definitions/docs.SuccessResponse'
+        "400":
+          description: Invalid Schedule ID
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "403":
+          description: Forbidden (Not Admin)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Schedule Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a schedule (Admin only)
+      tags:
+      - Schedules
+    get:
+      description: Get details of a specific schedule by its ID
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Schedule retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.ScheduleResponse'
+              type: object
+        "400":
+          description: Invalid Schedule ID
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Schedule Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get schedule by ID
+      tags:
+      - Schedules
+    put:
+      consumes:
+      - application/json
+      description: Update details of an existing schedule
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Schedule update request
+        in: body
+        name: schedule
+        required: true
+        schema:
+          $ref: '#/definitions/go-futsal-booking-api_internal_dto_request.UpdateScheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Schedule successfully updated
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.ScheduleResponse'
+              type: object
+        "400":
+          description: Bad Request, Invalid ID, or Validation Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "403":
+          description: Forbidden (Not Admin)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Schedule Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a schedule (Admin only)
+      tags:
+      - Schedules
+  /users/email-verification/{code}:
+    get:
+      description: Verify a user's email account using the provided code from the
+        email link
+      parameters:
+      - description: Email verification code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success to Verifying Email
+          schema:
+            $ref: '#/definitions/docs.SuccessResponse'
+        "401":
+          description: Invalid or expired URL
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      summary: Verify user email
+      tags:
+      - Users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Log in with email and password to receive a JWT token
+      parameters:
+      - description: User login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/go-futsal-booking-api_internal_dto_request.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.LoginResponse'
+              type: object
+        "400":
+          description: Invalid request body or validation error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: LOGIN_FAILED (Invalid credentials or email not verified)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      summary: Log in a user
+      tags:
+      - Users
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new customer account
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/go-futsal-booking-api_internal_dto_request.UserRegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.UserResponse'
+              type: object
+        "400":
+          description: REGISTER_FAILED (e.g., email already exists)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Users
+  /venues:
+    get:
+      description: Get a list of all available venues
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Venue retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.VenueResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all venues
+      tags:
+      - Venues
+    post:
+      consumes:
+      - application/json
+      description: Create a new futsal venue
+      parameters:
+      - description: Venue creation request
+        in: body
+        name: venue
+        required: true
+        schema:
+          $ref: '#/definitions/go-futsal-booking-api_internal_dto_request.CreateVenueRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Venue successfully created
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.VenueResponse'
+              type: object
+        "400":
+          description: Bad Request or Validation Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "403":
+          description: Forbidden (Not Admin)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new venue (Admin only)
+      tags:
+      - Venues
+  /venues/{id}:
+    delete:
+      description: Delete an existing venue by its ID
+      parameters:
+      - description: Venue ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Venue deleted successfully
+          schema:
+            $ref: '#/definitions/docs.SuccessResponse'
+        "400":
+          description: Invalid Venue ID
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "403":
+          description: Forbidden (Not Admin)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Venue Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a venue (Admin only)
+      tags:
+      - Venues
+    get:
+      description: Get details of a specific venue by its ID
+      parameters:
+      - description: Venue ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Venue retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.VenueResponse'
+              type: object
+        "400":
+          description: Invalid Venue ID
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Venue Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get venue by ID
+      tags:
+      - Venues
+    put:
+      consumes:
+      - application/json
+      description: Update details of an existing venue
+      parameters:
+      - description: Venue ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Venue update request
+        in: body
+        name: venue
+        required: true
+        schema:
+          $ref: '#/definitions/go-futsal-booking-api_internal_dto_request.UpdateVenueRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Venue successfully updated
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/go-futsal-booking-api_internal_dto_response.VenueResponse'
+              type: object
+        "400":
+          description: Bad Request, Invalid ID, or Validation Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Unauthorized (Missing Token)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "403":
+          description: Forbidden (Not Admin)
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Venue Not Found
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a venue (Admin only)
+      tags:
+      - Venues
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
