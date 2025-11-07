@@ -16,7 +16,6 @@ import (
 )
 
 func init() {
-	// Initialize logger for testing
 	logger.Init("test")
 }
 
@@ -44,12 +43,10 @@ func TestUserService_Register(t *testing.T) {
 		age := 25
 		address := "123 Main St"
 
-		// Mock: email should not exist
 		mockUserRepo.EXPECT().
 			FindByEmail(ctx, email).
 			Return(domain.User{}, errors.New("user not found"))
 
-		// Mock: create user
 		mockUserRepo.EXPECT().
 			Create(ctx, gomock.Any()).
 			DoAndReturn(func(ctx context.Context, user *domain.User) error {
@@ -58,7 +55,6 @@ func TestUserService_Register(t *testing.T) {
 				return nil
 			})
 
-		// Mock: send email (can fail without affecting the flow)
 		mockNotifRepo.EXPECT().
 			SendEmail(gomock.Any(), email, gomock.Any(), gomock.Any()).
 			Return(nil)
@@ -69,7 +65,7 @@ func TestUserService_Register(t *testing.T) {
 		assert.Equal(t, uint(1), result.ID)
 		assert.Equal(t, fullName, result.FullName)
 		assert.Equal(t, email, result.Email)
-		assert.Equal(t, "", result.Password) // Password should be cleared
+		assert.Equal(t, "", result.Password)
 		assert.False(t, result.IsVerified)
 	})
 
@@ -77,7 +73,6 @@ func TestUserService_Register(t *testing.T) {
 		ctx := context.Background()
 		email := "existing@example.com"
 
-		// Mock: email already exists
 		mockUserRepo.EXPECT().
 			FindByEmail(ctx, email).
 			Return(domain.User{ID: 1, Email: email}, nil)
@@ -119,7 +114,7 @@ func TestUserService_Register(t *testing.T) {
 		result, err := userService.Register(ctx, "John Doe", email, "password123", 10, "Address")
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "age must be at leats 15 years old")
+		assert.Contains(t, err.Error(), "age must be at least 15 years old")
 		assert.Equal(t, uint(0), result.ID)
 	})
 
@@ -164,7 +159,6 @@ func TestUserService_Login(t *testing.T) {
 		email := "john.doe@example.com"
 		password := "password123"
 
-		// Use actual bcrypt for testing with cost 10 for speed
 		hashedPassword := "$2a$10$RZRAkKRSKe/DR8AaCo8N6e0pJW.eDwsOUMbHkrDoa1OWAkTQ9Y4Oy"
 
 		user := domain.User{
@@ -189,7 +183,7 @@ func TestUserService_Login(t *testing.T) {
 		assert.NotEmpty(t, token)
 		assert.Equal(t, user.ID, result.ID)
 		assert.Equal(t, user.Email, result.Email)
-		assert.Equal(t, "", result.Password) // Password should be cleared
+		assert.Equal(t, "", result.Password)
 	})
 
 	t.Run("Fail - User not found", func(t *testing.T) {

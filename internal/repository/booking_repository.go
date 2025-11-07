@@ -12,7 +12,7 @@ import (
 type BookingRepository interface {
 	Create(ctx context.Context, booking *domain.Booking) error
 	FindByID(ctx context.Context, id uint) (domain.Booking, error)
-	FindByUserID(ctx context.Context, userID uint) (*domain.Booking, error)
+	FindByUserID(ctx context.Context, userID uint) ([]*domain.Booking, error)
 	CancelBooking(ctx context.Context, bookingID uint) error
 }
 
@@ -62,7 +62,7 @@ func (r *gormBookingRepository) FindByID(ctx context.Context, id uint) (domain.B
 	return booking, nil
 }
 
-func (r *gormBookingRepository) FindByUserID(ctx context.Context, userID uint) (*domain.Booking, error) {
+func (r *gormBookingRepository) FindByUserID(ctx context.Context, userID uint) ([]*domain.Booking, error) {
 	var gormBookings []gormContract.BookingGorm
 
 	err := r.preload(ctx).Where("user_id = ?", userID).Find(&gormBookings).Error
@@ -74,8 +74,12 @@ func (r *gormBookingRepository) FindByUserID(ctx context.Context, userID uint) (
 		return nil, domain.ErrBookingNotFound
 	}
 
-	booking := gormBookings[0].ToDomain()
-	return &booking, nil
+	bookings := make([]*domain.Booking, len(gormBookings))
+	for i, gb := range gormBookings {
+		b := gb.ToDomain()
+		bookings[i] = &b
+	}
+	return bookings, nil
 }
 
 func (r *gormBookingRepository) CancelBooking(ctx context.Context, bookingID uint) error {

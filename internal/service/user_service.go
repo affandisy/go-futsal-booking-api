@@ -66,7 +66,7 @@ func (s *userService) Register(ctx context.Context, fullName, email, password st
 
 	if err := s.validate.Var(age, "required,min=15"); err != nil {
 		logger.Error("Invalid user age", err)
-		return domain.User{}, errors.New("age must be at leats 15 years old")
+		return domain.User{}, errors.New("age must be at least 15 years old")
 	}
 
 	_, err := s.userRepo.FindByEmail(ctx, email)

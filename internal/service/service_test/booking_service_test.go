@@ -16,7 +16,6 @@ import (
 )
 
 func init() {
-	// Initialize logger for testing
 	logger.Init("test")
 }
 
@@ -322,31 +321,48 @@ func TestBookingService_GetMyBookings(t *testing.T) {
 		ctx := context.Background()
 		userID := uint(1)
 
-		booking := &domain.Booking{
-			ID:          1,
-			BookingDate: time.Now(),
-			Status:      "PENDING",
-			TotalPrice:  100000,
-			User: domain.User{
-				ID:       userID,
-				FullName: "John Doe",
+		bookings := []*domain.Booking{
+			{
+				ID:          1,
+				BookingDate: time.Now(),
+				Status:      "PENDING",
+				TotalPrice:  100000,
+				User: domain.User{
+					ID:       userID,
+					FullName: "John Doe",
+				},
+				Schedule: domain.Schedule{
+					ID:    1,
+					Price: 100000,
+				},
 			},
-			Schedule: domain.Schedule{
-				ID:    1,
-				Price: 100000,
+			{
+				ID:          2,
+				BookingDate: time.Now().Add(24 * time.Hour),
+				Status:      "CONFIRMED",
+				TotalPrice:  150000,
+				User: domain.User{
+					ID:       userID,
+					FullName: "John Doe",
+				},
+				Schedule: domain.Schedule{
+					ID:    2,
+					Price: 150000,
+				},
 			},
 		}
 
 		mockBookingRepo.EXPECT().
 			FindByUserID(ctx, userID).
-			Return(booking, nil)
+			Return(bookings, nil)
 
 		result, err := bookingService.GetMyBookings(ctx, userID)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
-		assert.Len(t, result, 1)
-		assert.Equal(t, booking.ID, result[0].ID)
+		assert.Len(t, result, 2)
+		assert.Equal(t, bookings[0].ID, result[0].ID)
+		assert.Equal(t, bookings[1].ID, result[1].ID)
 	})
 
 	t.Run("Fail - Invalid user ID", func(t *testing.T) {

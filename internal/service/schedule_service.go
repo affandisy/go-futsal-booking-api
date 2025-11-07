@@ -41,20 +41,6 @@ func parseTime(timeStr string) (time.Time, error) {
 	return time.Parse("15:04", timeStr)
 }
 
-// func (s *scheduleService) validateScheduleTime(startTime, endTime time.Time) error {
-// 	if !endTime.After(startTime) {
-// 		return domain.ErrInvalidTimeRange
-// 	}
-
-// 	// invalid duration, minimum 1 hour
-// 	duration := endTime.Sub(startTime)
-// 	if duration <= 60*time.Minute {
-// 		return domain.ErrInvalidDuration
-// 	}
-
-// 	return nil
-// }
-
 func (s *scheduleService) GetScheduleByID(ctx context.Context, id uint) (*domain.Schedule, error) {
 	if id == 0 {
 		return nil, errors.New("invalid schedule id")
@@ -163,9 +149,24 @@ func (s *scheduleService) CreateSchedule(ctx context.Context, req *request.Creat
 }
 
 func (s *scheduleService) UpdateSchedule(ctx context.Context, id uint, dayOfWeek int, startTime, endTime string, price float64) (*domain.Schedule, error) {
-	if id == 0 || dayOfWeek == 0 || startTime == "" || endTime == "" || price == 0 {
-		logger.Error("invalid schedule update request")
-		return nil, errors.New("invalid schedule update request")
+	if id == 0 {
+		return nil, errors.New("invalid schedule id")
+	}
+
+	if dayOfWeek == 0 {
+		return nil, errors.New("invalid schedule dayOfWeek")
+	}
+
+	if startTime == "" {
+		return nil, errors.New("invalid schedule startTime")
+	}
+
+	if endTime == "" {
+		return nil, errors.New("invalid schedule endTime")
+	}
+
+	if price == 0 {
+		return nil, errors.New("invalid schedule price")
 	}
 
 	if err := ctx.Err(); err != nil {
