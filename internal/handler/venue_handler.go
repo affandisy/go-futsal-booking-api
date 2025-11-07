@@ -15,6 +15,10 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+
+	_ "go-futsal-booking-api/docs"
+	// _ "go-futsal-booking-api/internal/dto/request"
+	// _ "go-futsal-booking-api/internal/dto/response"
 )
 
 type VenueHandler struct {
@@ -29,6 +33,19 @@ func NewVenueHandler(venueService service.VenueService) *VenueHandler {
 	}
 }
 
+// GetVenueByID godoc
+// @Summary Get venue by ID
+// @Description Get details of a specific venue by its ID
+// @Tags Venues
+// @Produce json
+// @Param id path uint true "Venue ID"
+// @Success 200 {object} docs.SuccessResponse{data=dto.VenueResponse} "Venue retrieved successfully"
+// @Failure 400 {object} docs.ErrorResponse "Invalid Venue ID"
+// @Failure 401 {object} docs.ErrorResponse "Unauthorized (Missing Token)"
+// @Failure 404 {object} docs.ErrorResponse "Venue Not Found"
+// @Failure 500 {object} docs.ErrorResponse "Internal Server Error"
+// @Security ApiKeyAuth
+// @Router /venues/{id} [get]
 func (h *VenueHandler) GetVenueByID(c echo.Context) error {
 	venueIdStr := c.Param("id")
 
@@ -76,6 +93,16 @@ func (h *VenueHandler) GetVenueByID(c echo.Context) error {
 	))
 }
 
+// GetAllVenues godoc
+// @Summary Get all venues
+// @Description Get a list of all available venues
+// @Tags Venues
+// @Produce json
+// @Success 200 {object} docs.SuccessResponse{data=[]dto.VenueResponse} "Venue retrieved successfully"
+// @Failure 401 {object} docs.ErrorResponse "Unauthorized (Missing Token)"
+// @Failure 500 {object} docs.ErrorResponse "Internal Server Error"
+// @Security ApiKeyAuth
+// @Router /venues [get]
 func (h *VenueHandler) GetAllVenues(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(c.Request().Context(), h.timeout)
 	defer cancel()
@@ -107,6 +134,20 @@ func (h *VenueHandler) GetAllVenues(c echo.Context) error {
 	))
 }
 
+// CreateVenue godoc
+// @Summary Create a new venue (Admin only)
+// @Description Create a new futsal venue
+// @Tags Venues
+// @Accept json
+// @Produce json
+// @Param venue body request.CreateVenueRequest true "Venue creation request"
+// @Success 201 {object} docs.SuccessResponse{data=dto.VenueResponse} "Venue successfully created"
+// @Failure 400 {object} docs.ErrorResponse "Bad Request or Validation Error"
+// @Failure 401 {object} docs.ErrorResponse "Unauthorized (Missing Token)"
+// @Failure 403 {object} docs.ErrorResponse "Forbidden (Not Admin)"
+// @Failure 500 {object} docs.ErrorResponse "Internal Server Error"
+// @Security ApiKeyAuth
+// @Router /venues [post]
 func (h *VenueHandler) CreateVenue(c echo.Context) error {
 	var req request.CreateVenueRequest
 
@@ -153,6 +194,22 @@ func (h *VenueHandler) CreateVenue(c echo.Context) error {
 	))
 }
 
+// UpdateVenue godoc
+// @Summary Update a venue (Admin only)
+// @Description Update details of an existing venue
+// @Tags Venues
+// @Accept json
+// @Produce json
+// @Param id path uint true "Venue ID"
+// @Param venue body request.UpdateVenueRequest true "Venue update request"
+// @Success 200 {object} docs.SuccessResponse{data=dto.VenueResponse} "Venue successfully updated"
+// @Failure 400 {object} docs.ErrorResponse "Bad Request, Invalid ID, or Validation Error"
+// @Failure 401 {object} docs.ErrorResponse "Unauthorized (Missing Token)"
+// @Failure 403 {object} docs.ErrorResponse "Forbidden (Not Admin)"
+// @Failure 404 {object} docs.ErrorResponse "Venue Not Found"
+// @Failure 500 {object} docs.ErrorResponse "Internal Server Error"
+// @Security ApiKeyAuth
+// @Router /venues/{id} [put]
 func (h *VenueHandler) UpdateVenue(c echo.Context) error {
 	venueIdStr := c.Param("id")
 
@@ -218,6 +275,20 @@ func (h *VenueHandler) UpdateVenue(c echo.Context) error {
 	))
 }
 
+// DeleteVenue godoc
+// @Summary Delete a venue (Admin only)
+// @Description Delete an existing venue by its ID
+// @Tags Venues
+// @Produce json
+// @Param id path uint true "Venue ID"
+// @Success 200 {object} docs.SuccessResponse "Venue deleted successfully"
+// @Failure 400 {object} docs.ErrorResponse "Invalid Venue ID"
+// @Failure 401 {object} docs.ErrorResponse "Unauthorized (Missing Token)"
+// @Failure 403 {object} docs.ErrorResponse "Forbidden (Not Admin)"
+// @Failure 404 {object} docs.ErrorResponse "Venue Not Found"
+// @Failure 500 {object} docs.ErrorResponse "Internal Server Error"
+// @Security ApiKeyAuth
+// @Router /venues/{id} [delete]
 func (h *VenueHandler) DeleteVenue(c echo.Context) error {
 	venueIdStr := c.Param("id")
 

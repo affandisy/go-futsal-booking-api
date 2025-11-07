@@ -8,6 +8,8 @@ import (
 
 func SetupUserRoutes(api *echo.Group, handler *handler.UserHandler) {
 	users := api.Group("/users")
+
+	users.GET("/email-verification/", handler.VerifyEmail)
 	users.POST("/register", handler.Register)
 	users.POST("/login", handler.Login)
 }

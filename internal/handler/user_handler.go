@@ -13,6 +13,10 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+
+	_ "go-futsal-booking-api/docs"
+	// _ "go-futsal-booking-api/internal/dto/request"
+	// _ "go-futsal-booking-api/internal/dto/response"
 )
 
 type UserHandler struct {
@@ -27,6 +31,17 @@ func NewUserHandler(userService service.UserService) *UserHandler {
 	}
 }
 
+// Register godoc
+// @Summary Register a new user
+// @Description Create a new customer account
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param user body request.UserRegisterRequest true "User registration details"
+// @Success 201 {object} docs.SuccessResponse{data=dto.UserResponse} "User registered successfully"
+// @Failure 400 {object} docs.ErrorResponse "Invalid request body or validation error"
+// @Failure 400 {object} docs.ErrorResponse "REGISTER_FAILED (e.g., email already exists)"
+// @Router /users/register [post]
 func (h *UserHandler) Register(c echo.Context) error {
 	var reqUser request.UserRegisterRequest
 
@@ -67,6 +82,17 @@ func (h *UserHandler) Register(c echo.Context) error {
 	))
 }
 
+// Login godoc
+// @Summary Log in a user
+// @Description Log in with email and password to receive a JWT token
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param credentials body request.UserLoginRequest true "User login credentials"
+// @Success 200 {object} docs.SuccessResponse{data=dto.LoginResponse} "Login successful"
+// @Failure 400 {object} docs.ErrorResponse "Invalid request body or validation error"
+// @Failure 401 {object} docs.ErrorResponse "LOGIN_FAILED (Invalid credentials or email not verified)"
+// @Router /users/login [post]
 func (h *UserHandler) Login(c echo.Context) error {
 	var reqUser request.UserLoginRequest
 
@@ -104,6 +130,16 @@ func (h *UserHandler) Login(c echo.Context) error {
 	))
 }
 
+// VerifyEmail godoc
+// @Summary Verify user email
+// @Description Verify a user's email account using the provided code from the email link
+// @Tags Users
+// @Produce json
+// @Param code path string true "Email verification code"
+// @Success 200 {object} docs.SuccessResponse "Success to Verifying Email"
+// @Failure 401 {object} docs.ErrorResponse "Invalid or expired URL"
+// @Failure 500 {object} docs.ErrorResponse "Internal server error"
+// @Router /users/email-verification/{code} [get]
 func (h *UserHandler) VerifyEmail(c echo.Context) error {
 	encCode := c.Param("code")
 

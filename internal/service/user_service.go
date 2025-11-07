@@ -54,17 +54,17 @@ func NewUserService(
 }
 
 func (s *userService) Register(ctx context.Context, fullName, email, password string, age int, address string) (domain.User, error) {
-	if err := s.validate.Var(email, "required, email"); err != nil {
+	if err := s.validate.Var(email, "required,email"); err != nil {
 		logger.Error("Invalid email format", err)
 		return domain.User{}, errors.New("invalid email format")
 	}
 
-	if err := s.validate.Var(password, "required, min=6"); err != nil {
+	if err := s.validate.Var(password, "required,min=6"); err != nil {
 		logger.Error("Invalid user password", err)
 		return domain.User{}, errors.New("password must be at least 6 characters")
 	}
 
-	if err := s.validate.Var(age, "required, min=15"); err != nil {
+	if err := s.validate.Var(age, "required,min=15"); err != nil {
 		logger.Error("Invalid user age", err)
 		return domain.User{}, errors.New("age must be at leats 15 years old")
 	}

@@ -15,6 +15,10 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+
+	_ "go-futsal-booking-api/docs"
+	// _ "go-futsal-booking-api/internal/dto/request"
+	// _ "go-futsal-booking-api/internal/dto/response"
 )
 
 type BookingHandler struct {
@@ -29,6 +33,20 @@ func NewBookingHandler(bookingService service.BookingService) *BookingHandler {
 	}
 }
 
+// CreateBooking godoc
+// @Summary Create a new booking
+// @Description Create a new booking for a specific schedule (Customer or Admin)
+// @Tags Bookings
+// @Accept json
+// @Produce json
+// @Param booking body request.CreateBookingRequest true "Booking creation request"
+// @Success 201 {object} docs.SuccessResponse{data=dto.BookingResponse} "Booking successfully created"
+// @Failure 400 {object} docs.ErrorResponse "Bad Request or Validation Error"
+// @Failure 401 {object} docs.ErrorResponse "Unauthorized (Missing Token)"
+// @Failure 404 {object} docs.ErrorResponse "Schedule Not Found"
+// @Failure 500 {object} docs.ErrorResponse "Internal Server Error"
+// @Security ApiKeyAuth
+// @Router /bookings [post]
 func (h *BookingHandler) CreateBooking(c echo.Context) error {
 	var req request.CreateBookingRequest
 
@@ -94,6 +112,19 @@ func (h *BookingHandler) CreateBooking(c echo.Context) error {
 	))
 }
 
+// GetMyBookings godoc
+// @Summary Get bookings by user ID
+// @Description Get a list of all bookings for a specific user (e.g., "My Bookings")
+// @Tags Bookings
+// @Produce json
+// @Param user_id query uint true "User ID"
+// @Success 200 {object} docs.SuccessResponse{data=[]dto.BookingResponse} "Bookings retrieved successfully"
+// @Failure 400 {object} docs.ErrorResponse "Missing or Invalid User ID"
+// @Failure 401 {object} docs.ErrorResponse "Unauthorized (Missing Token)"
+// @Failure 404 {object} docs.ErrorResponse "User Not Found"
+// @Failure 500 {object} docs.ErrorResponse "Internal Server Error"
+// @Security ApiKeyAuth
+// @Router /bookings [get]
 func (h *BookingHandler) GetMyBookings(c echo.Context) error {
 	// userIdStr := c.Param("user_id")
 	userIdStr := c.QueryParam("user_id")
@@ -152,6 +183,19 @@ func (h *BookingHandler) GetMyBookings(c echo.Context) error {
 	))
 }
 
+// GetBookingDetails godoc
+// @Summary Get booking details by ID
+// @Description Get details of a specific booking by its ID
+// @Tags Bookings
+// @Produce json
+// @Param id path uint true "Booking ID"
+// @Success 200 {object} docs.SuccessResponse{data=dto.BookingResponse} "Booking retrieved successfully"
+// @Failure 400 {object} docs.ErrorResponse "Invalid Booking ID"
+// @Failure 401 {object} docs.ErrorResponse "Unauthorized (Missing Token)"
+// @Failure 404 {object} docs.ErrorResponse "Booking Not Found"
+// @Failure 500 {object} docs.ErrorResponse "Internal Server Error"
+// @Security ApiKeyAuth
+// @Router /bookings/{id} [get]
 func (h *BookingHandler) GetBookingDetails(c echo.Context) error {
 	bookingIdStr := c.Param("id")
 
