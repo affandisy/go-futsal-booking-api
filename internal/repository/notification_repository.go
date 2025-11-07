@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/pobyzaarif/goshortcute"
 )
@@ -32,7 +33,7 @@ func NewMailjetRepository(cfg MailjetConfig) *MailjetRepository {
 }
 
 type payloadSendEmail struct {
-	Messages []Messages `json:"Message"`
+	Messages []Messages `json:"Messages"`
 }
 
 type From struct {
@@ -85,13 +86,13 @@ func (r *MailjetRepository) SendEmail(toName, toEmail, subject, message string) 
 		return fmt.Errorf("failed to marshal json payload: %w", err)
 	}
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: 5 * time.Second}
 	req, err := http.NewRequest(method, url, strings.NewReader(string(payloadByte)))
 	if err != nil {
 		return err
 	}
 
-	buildBasicAuth := goshortcute.StringtoBase64Decode(r.mailjetConfig.MailjetBasicAuthUsername + ":" + r.mailjetConfig.MailjetBasicAuthPassword)
+	buildBasicAuth := goshortcute.StringtoBase64Encode(r.mailjetConfig.MailjetBasicAuthUsername + ":" + r.mailjetConfig.MailjetBasicAuthPassword)
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Basic "+buildBasicAuth)
 

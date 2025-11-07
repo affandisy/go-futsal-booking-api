@@ -105,7 +105,10 @@ func (s *userService) Register(ctx context.Context, fullName, email, password st
 	verificationCodeEncrypt, _ := goshortcute.AESCBCEncrypt([]byte(verificationCode), []byte(s.appEmailVerificationKey))
 	activationLink := s.appDeploymentUrl + "/users/email-verification/" + verificationCodeEncrypt
 
-	_ = s.notifRepo.SendEmail(newUser.FullName, newUser.Email, SubjectRegisterAccount, fmt.Sprintf(EmailBodyRegisterAccount, newUser.FullName, activationLink, verificationCodeTTL))
+	err = s.notifRepo.SendEmail(newUser.FullName, newUser.Email, SubjectRegisterAccount, fmt.Sprintf(EmailBodyRegisterAccount, newUser.FullName, activationLink, verificationCodeTTL))
+	if err != nil {
+		logger.Warn("Failed to send verification email", err)
+	}
 
 	newUser.Password = ""
 	return newUser, nil
