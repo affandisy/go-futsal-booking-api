@@ -38,6 +38,13 @@ func NewScheduleService(scheduleRepo repository.ScheduleRepository, fieldRepo re
 }
 
 func parseTime(timeStr string) (time.Time, error) {
+	// Try parsing with seconds first (HH:MM:SS)
+	t, err := time.Parse("15:04:05", timeStr)
+	if err == nil {
+		return t, nil
+	}
+
+	// Fallback to parsing without seconds (HH:MM)
 	return time.Parse("15:04", timeStr)
 }
 
@@ -110,11 +117,11 @@ func (s *scheduleService) CreateSchedule(ctx context.Context, req *request.Creat
 
 	startT, err := parseTime(req.StartTime)
 	if err != nil {
-		return nil, errors.New("invalid start time format, use HH:MM")
+		return nil, errors.New("invalid start time format, use HH:MM or HH:MM:SS")
 	}
 	endT, err := parseTime(req.EndTime)
 	if err != nil {
-		return nil, errors.New("invalid end time format, use HH:MM")
+		return nil, errors.New("invalid end time format, use HH:MM or HH:MM:SS")
 	}
 
 	if !endT.After(startT) {

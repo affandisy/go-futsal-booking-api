@@ -106,3 +106,7 @@ CREATE TABLE IF NOT EXISTS payments (
     deleted_at TIMESTAMP NULL,
     FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
 );
+
+
+
+
