@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"go-futsal-booking-api/pkg/logger"
 	jsonres "go-futsal-booking-api/pkg/response"
 	"go-futsal-booking-api/pkg/utils"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -47,7 +49,15 @@ func AuthMiddleware() echo.MiddlewareFunc {
 				))
 			}
 
-			c.Set("userID", claims.UserID)
+			userIDUint, err := strconv.ParseUint(claims.UserID, 10, 64)
+			if err != nil {
+				logger.Error("Invalid user ID in token", err)
+				return c.JSON(http.StatusForbidden, jsonres.Error(
+					"FORBIDDEN", "Invalid user ID in token", nil,
+				))
+			}
+
+			c.Set("userID", uint(userIDUint))
 			c.Set("role", claims.Role)
 
 			return next(c)

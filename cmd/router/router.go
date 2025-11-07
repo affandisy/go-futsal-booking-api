@@ -12,40 +12,40 @@ func SetupUserRoutes(api *echo.Group, handler *handler.UserHandler) {
 	users.POST("/login", handler.Login)
 }
 
-func SetupFieldRoutes(api *echo.Group, handler *handler.FieldHandler) {
+func SetupFieldRoutes(api *echo.Group, handler *handler.FieldHandler, authRequired echo.MiddlewareFunc, adminOnly echo.MiddlewareFunc) {
 	fields := api.Group("/fields")
-	fields.GET("", handler.GetFieldsByVenue)
-	fields.GET("/:id", handler.GetFieldByID)
+	fields.GET("", handler.GetFieldsByVenue, authRequired)
+	fields.GET("/:id", handler.GetFieldByID, authRequired)
 
-	fields.POST("", handler.CreateField)
-	fields.PUT("/:id", handler.UpdateField)
-	fields.DELETE("/:id", handler.DeleteField)
+	fields.POST("", handler.CreateField, authRequired, adminOnly)
+	fields.PUT("/:id", handler.UpdateField, authRequired, adminOnly)
+	fields.DELETE("/:id", handler.DeleteField, authRequired, adminOnly)
 }
 
-func SetupVenueRoutes(api *echo.Group, handler *handler.VenueHandler) {
+func SetupVenueRoutes(api *echo.Group, handler *handler.VenueHandler, authRequired echo.MiddlewareFunc, adminOnly echo.MiddlewareFunc) {
 	venues := api.Group("/venues")
-	venues.GET("", handler.GetAllVenues)
-	venues.GET("/:id", handler.GetVenueByID)
+	venues.GET("", handler.GetAllVenues, authRequired)
+	venues.GET("/:id", handler.GetVenueByID, authRequired)
 
-	venues.POST("", handler.CreateVenue)
-	venues.PUT("/:id", handler.UpdateVenue)
-	venues.DELETE("/:id", handler.DeleteVenue)
+	venues.POST("", handler.CreateVenue, authRequired, adminOnly)
+	venues.PUT("/:id", handler.UpdateVenue, authRequired, adminOnly)
+	venues.DELETE("/:id", handler.DeleteVenue, authRequired, adminOnly)
 }
 
-func SetupScheduleRoutes(api *echo.Group, handler *handler.ScheduleHandler) {
+func SetupScheduleRoutes(api *echo.Group, handler *handler.ScheduleHandler, authRequired echo.MiddlewareFunc, adminOnly echo.MiddlewareFunc) {
 	schedules := api.Group("/schedules")
-	schedules.GET("", handler.GetScheduleByField)
-	schedules.GET("/:id", handler.GetScheduleByID)
+	schedules.GET("", handler.GetScheduleByField, authRequired)
+	schedules.GET("/:id", handler.GetScheduleByID, authRequired)
 
-	schedules.POST("", handler.CreateSchedule)
-	schedules.PUT("/:id", handler.UpdateSchedule)
-	schedules.DELETE("/:id", handler.DeleteSchedule)
+	schedules.POST("", handler.CreateSchedule, authRequired, adminOnly)
+	schedules.PUT("/:id", handler.UpdateSchedule, authRequired, adminOnly)
+	schedules.DELETE("/:id", handler.DeleteSchedule, authRequired, adminOnly)
 }
 
-func SetupBookingRoutes(api *echo.Group, handler *handler.BookingHandler) {
+func SetupBookingRoutes(api *echo.Group, handler *handler.BookingHandler, authRequired echo.MiddlewareFunc, adminOnly echo.MiddlewareFunc) {
 	bookings := api.Group("/bookings")
-	bookings.GET("/:id", handler.GetBookingDetails)
-	bookings.GET("", handler.GetMyBookings)
+	bookings.GET("/:id", handler.GetBookingDetails, authRequired)
+	bookings.GET("", handler.GetMyBookings, authRequired)
 
-	bookings.POST("", handler.CreateBooking)
+	bookings.POST("", handler.CreateBooking, authRequired)
 }

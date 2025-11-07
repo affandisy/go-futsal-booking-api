@@ -90,13 +90,17 @@ func main() {
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 	}))
 
+	// Auth middleware
+	authRequired := middleware.AuthMiddleware()
+	adminOnly := middleware.AdminOnly()
+
 	// Setup routes
 	api := e.Group("/api/v1")
 	router.SetupUserRoutes(api, userHandler)
-	router.SetupFieldRoutes(api, fieldHandler)
-	router.SetupVenueRoutes(api, venueHandler)
-	router.SetupScheduleRoutes(api, scheduleHandler)
-	router.SetupBookingRoutes(api, bookingHandler)
+	router.SetupFieldRoutes(api, fieldHandler, authRequired, adminOnly)
+	router.SetupVenueRoutes(api, venueHandler, authRequired, adminOnly)
+	router.SetupScheduleRoutes(api, scheduleHandler, authRequired, adminOnly)
+	router.SetupBookingRoutes(api, bookingHandler, authRequired, adminOnly)
 
 	// Goroutine server
 	go func() {

@@ -3,8 +3,8 @@
 -- Insert into roles
 INSERT INTO roles (id, role_name)
 VALUES
-    (1, 'admin'),
-    (2, 'customer');
+    (1, 'ADMIN'),
+    (2, 'CUSTOMER');
 
 
 -- Insert into users
