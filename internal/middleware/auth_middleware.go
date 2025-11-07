@@ -57,7 +57,7 @@ func AuthMiddleware() echo.MiddlewareFunc {
 				))
 			}
 
-			c.Set("userID", uint(userIDUint))
+			c.Set("user_id", uint(userIDUint))
 			c.Set("role", claims.Role)
 
 			return next(c)
@@ -69,7 +69,8 @@ func AdminOnly() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			role := c.Get("role")
-			if role != "ADMIN" {
+			roleStr, ok := role.(string)
+			if !ok || strings.ToUpper(roleStr) != "ADMIN" {
 				return c.JSON(http.StatusForbidden, jsonres.Error(
 					"FORBIDDEN", "Admin access required", nil,
 				))

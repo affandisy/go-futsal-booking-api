@@ -49,13 +49,13 @@ func (s *venueService) GetVenueByID(ctx context.Context, id uint) (*domain.Venue
 
 func (s *venueService) GetAllVenues(ctx context.Context) ([]domain.Venue, error) {
 	if err := ctx.Err(); err != nil {
-		logger.Error("context error when get venue by venue")
+		logger.Error("context error when get all venues")
 		return nil, fmt.Errorf("context error: %w", err)
 	}
 
 	venues, err := s.venueRepo.FindAll(ctx)
 	if err != nil {
-		logger.Error("Failed to find venue by venue id", err)
+		logger.Error("Failed to find all venue", err)
 		return nil, err
 	}
 

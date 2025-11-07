@@ -125,7 +125,7 @@ func (s *bookingService) GetMyBookings(ctx context.Context, userID uint) ([]*dom
 		return nil, err
 	}
 
-	return []*domain.Booking{booking}, nil
+	return booking, nil
 }
 
 func (s *bookingService) GetBookingByID(ctx context.Context, bookingID uint) (*domain.Booking, error) {

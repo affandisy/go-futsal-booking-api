@@ -78,10 +78,10 @@ func (mr *MockBookingRepositoryMockRecorder) FindByID(ctx, id interface{}) *gomo
 }
 
 // FindByUserID mocks base method.
-func (m *MockBookingRepository) FindByUserID(ctx context.Context, userID uint) (*domain.Booking, error) {
+func (m *MockBookingRepository) FindByUserID(ctx context.Context, userID uint) ([]*domain.Booking, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByUserID", ctx, userID)
-	ret0, _ := ret[0].(*domain.Booking)
+	ret0, _ := ret[0].([]*domain.Booking)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -130,7 +130,9 @@ func (h *BookingHandler) GetMyBookings(c echo.Context) error {
 	userIdStr := c.QueryParam("user_id")
 	if userIdStr == "" {
 		logger.Error("missing user_id query parameter")
-
+		return c.JSON(http.StatusBadRequest, jsonres.Error(
+			"BAD_REQUEST", "Invalid user id", map[string]interface{}{"id": userIdStr},
+		))
 	}
 
 	userId, err := strconv.ParseUint(userIdStr, 10, 64)
